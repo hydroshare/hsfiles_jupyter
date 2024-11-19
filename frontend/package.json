@@ -1,0 +1,24 @@
+{
+  "name": "hs-file-upload-jupyterlab-extension",
+  "version": "0.1.0",
+  "description": "A JupyterLab extension to upload files to HydroShare",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@jupyterlab/application": "^4.2.5",
+    "@jupyterlab/apputils": "^4.3.5",
+    "@jupyterlab/coreutils": "^6.2.5",
+    "@jupyterlab/filebrowser": "^4.2.5",
+    "@jupyterlab/settingregistry": "^4.2.5",
+    "typescript": "^4.9.5"
+  },
+  "jupyterlab": {
+    "extension": true
+  },
+  "devDependencies": {
+    "@types/json-schema": "^7.0.15"
+  }
+}
