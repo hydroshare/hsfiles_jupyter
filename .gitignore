@@ -2,3 +2,11 @@ node_modules/
 lib/
 __pycache__/
 *.pyc
+*.egg-info
+.DS_Store
+.idea/
+.venv/
+frontend/node_modules/
+frontend/lib/
+build/
+dist/
