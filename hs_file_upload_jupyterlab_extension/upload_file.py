@@ -1,11 +1,11 @@
 import os
-from functools import lru_cache
+from async_lru import alru_cache
 
 from hsclient import HydroShare
 
 
-@lru_cache(maxsize=None)
-def get_credentials():
+@alru_cache(maxsize=None)
+async def get_credentials():
     home_dir = os.path.expanduser("~")
     print(f">> home_dir: {home_dir}", flush=True)
     user_file = os.path.join(home_dir, '.hs_user')
@@ -24,17 +24,15 @@ def get_credentials():
     return username, password
 
 
-@lru_cache(maxsize=None)
-def get_hsclient_instance():
-    username, password = get_credentials()
+@alru_cache(maxsize=None)
+async def get_hsclient_instance():
+    username, password = await get_credentials()
     return HydroShare(username=username, password=password)
 
 
 async def upload_file_to_hydroshare(file_path):
-    if file_path is None:
-        return '>> File path is None in upload_file_to_hydroshare'
     resource_id = await get_resource_id(file_path)
-    hs_client = get_hsclient_instance()
+    hs_client = await get_hsclient_instance()
     # get the hydroshare resource to which the file will be uploaded
     resource = hs_client.resource(resource_id=resource_id)
     # TODO: This path here I am hard coding as this is path I am setting as the notebook-dir when locally running
