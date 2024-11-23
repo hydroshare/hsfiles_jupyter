@@ -64,7 +64,11 @@ async def upload_file_to_hydroshare(file_path):
         success_msg = f'File {hs_file_path} uploaded successfully to HydroShare resource: {resource_id}'
         return {"success": success_msg}
     except Exception as e:
-        err_msg = f'Failed to upload file: {file_path} to HydroShare resource: {resource_id}. Error: {str(e)}'
+        hs_error = str(e)
+        if 'already exists' in hs_error:
+            err_msg = f'File {hs_file_path} already exists in HydroShare resource: {resource_id}'
+            return {"error": err_msg}
+        err_msg = f'Failed to upload file: {hs_file_path} to HydroShare resource: {resource_id}. Error: {hs_error}'
         return {"error": err_msg}
 
 
