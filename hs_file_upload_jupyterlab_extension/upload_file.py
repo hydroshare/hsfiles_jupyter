@@ -58,10 +58,10 @@ async def upload_file_to_hydroshare(file_path):
     # TODO: This path here I am hard coding as this is path I am setting as the notebook-dir when locally running
     #  jupyter lab --debug --notebook-dir=D:\Temp\hs_on_jupyter
     #  In 2i2c environment, this path join won't be necessary
-    file_path = os.path.join("D:\\Temp\\hs_on_jupyter", file_path)
+    absolute_file_path = os.path.join("D:\\Temp\\hs_on_jupyter", file_path)
     try:
-        resource.file_upload(file_path)
-        success_msg = f'File: {file_path} uploaded successfully to HydroShare resource: {resource_id}'
+        resource.file_upload(absolute_file_path, destination_path=file_folder)
+        success_msg = f'File {hs_file_path} uploaded successfully to HydroShare resource: {resource_id}'
         return {"success": success_msg}
     except Exception as e:
         err_msg = f'Failed to upload file: {file_path} to HydroShare resource: {resource_id}. Error: {str(e)}'
