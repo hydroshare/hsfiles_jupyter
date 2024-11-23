@@ -68,8 +68,8 @@ const extension: JupyterFrontEndPlugin<void> = {
               console.log('File uploaded to HydroShare successfully:', path);
               // Show success message
               await showDialog({
-                title: 'Upload to HydroShare Successful',
-                body: `File ${path} uploaded successfully!`,
+                title: 'Upload to HydroShare was Successful',
+                body: `${response.success}`,
                 buttons: [Dialog.okButton({label: 'OK'})]
               });
             } catch (error) {
@@ -77,7 +77,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                 console.error('Failed to upload file to HydroShare:', error.message);
                 await showDialog({
                   title: 'Upload to HydroShare Failed',
-                  body: `Failed to upload file ${path}. Error: ${error.message}.`,
+                  body: ` Error: ${error.message}.`,
                   buttons: [Dialog.okButton({label: 'OK'})]
                 });
               } else {
