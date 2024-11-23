@@ -35,6 +35,26 @@ async def upload_file_to_hydroshare(file_path):
     hs_client = await get_hsclient_instance()
     # get the hydroshare resource to which the file will be uploaded
     resource = hs_client.resource(resource_id=resource_id)
+
+    hs_file_path = file_path.split(resource_id, 1)[1]
+    if hs_file_path.startswith('/'):
+        hs_file_path = hs_file_path[1:]
+    # add resource id to the file path if it doesn't already start with it
+    if not hs_file_path.startswith(resource_id):
+        hs_file_path = os.path.join(resource_id, hs_file_path)
+    print(f">> hs_file_path: {hs_file_path}", flush=True)
+
+    # get all files in the resource
+    resource.refresh()
+    files = resource.files(search_aggregations=True)
+    print(f">> files in resource: {files}", flush=True)
+    hs_file_relative_path = hs_file_path.split(f"{resource_id}/data/contents/", 1)[1]
+    print(f">> hs_file_relative_path: {hs_file_relative_path}", flush=True)
+    if hs_file_relative_path in files:
+        err_msg = f'File {hs_file_path} already exists in HydroShare resource: {resource_id}'
+        return {"error": err_msg}
+    file_folder = os.path.dirname(hs_file_relative_path)
+    print(f">> file_folder: {file_folder}", flush=True)
     # TODO: This path here I am hard coding as this is path I am setting as the notebook-dir when locally running
     #  jupyter lab --debug --notebook-dir=D:\Temp\hs_on_jupyter
     #  In 2i2c environment, this path join won't be necessary
@@ -49,8 +69,6 @@ async def upload_file_to_hydroshare(file_path):
 
 
 async def get_resource_id(file_path):
-    if file_path is None:
-        return '>> File path is None in get_resource_id'
     print(f">> file_path: {file_path}", flush=True)
     if file_path.startswith('Downloads/'):
         res_id = file_path.split('/')[1]
