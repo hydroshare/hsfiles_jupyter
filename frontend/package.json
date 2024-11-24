@@ -1,5 +1,5 @@
 {
-  "name": "hs-file-upload-jupyterlab-extension",
+  "name": "hsfiles-jupyter",
   "version": "0.1.0",
   "description": "A JupyterLab extension to upload files to HydroShare",
   "main": "lib/index.js",

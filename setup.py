@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='hs-file-upload-jupyterlab-extension',
+    name='hsfiles-jupyter',
     version='0.1',
     packages=find_packages(),
     install_requires=[
@@ -10,7 +10,7 @@ setup(
     ],
     entry_points={
         'jupyter_serverproxy_servers': [
-            'upload = hs_file_upload_jupyterlab_extension:setup_upload_handler'
+            'upload = hsfiles_jupyter:setup_upload_handler'
         ]
     }
 )

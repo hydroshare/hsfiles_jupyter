@@ -32,7 +32,7 @@ async function requestAPI<T>(url: string, init: RequestInit): Promise<T> {
 }
 
 const extension: JupyterFrontEndPlugin<void> = {
-  id: 'hs-file-upload-jupyterlab-extension',
+  id: 'hsfiles-jupyter',
   autoStart: true,
   requires: [IFileBrowserFactory],
   activate: (app: JupyterFrontEnd, factory: IFileBrowserFactory) => {
