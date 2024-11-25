@@ -21,10 +21,8 @@ class SpinnerWidget extends Widget {
 async function requestAPI<T>(url: string, init: RequestInit): Promise<T> {
   const settings = ServerConnection.makeSettings();
   const requestUrl = URLExt.join(settings.baseUrl, 'hydroshare', url);
-  console.log(">> requestUrl:", requestUrl);
   const response = await ServerConnection.makeRequest(requestUrl, init, settings);
   const data = await response.json();
-  console.log(">> Hydroshare file upload response data:", data);
   if (data.response.error) {
     throw new Error(data.response.error);
   }
@@ -47,8 +45,6 @@ const extension: JupyterFrontEndPlugin<void> = {
           const selectedItem = widget.selectedItems().next();
           if(selectedItem && selectedItem.value) {
             const path = selectedItem.value.path;
-            // const widget = new Widget();
-            // widget.id = 'upload-to-hydroshare-dialog';
 
             // new spinner widget
             const spinnerWidget = new SpinnerWidget();

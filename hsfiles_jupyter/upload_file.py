@@ -7,7 +7,6 @@ from hsclient import HydroShare
 @alru_cache(maxsize=None)
 async def get_credentials():
     home_dir = os.path.expanduser("~")
-    print(f">> home_dir: {home_dir}", flush=True)
     user_file = os.path.join(home_dir, '.hs_user')
     pass_file = os.path.join(home_dir, '.hs_pass')
 
@@ -42,19 +41,15 @@ async def upload_file_to_hydroshare(file_path):
     # add resource id to the file path if it doesn't already start with it
     if not hs_file_path.startswith(resource_id):
         hs_file_path = os.path.join(resource_id, hs_file_path)
-    print(f">> hs_file_path: {hs_file_path}", flush=True)
 
-    # get all files in the resource
+    # get all files in the resource to check if the file to be uploaded already exists in the resource
     resource.refresh()
     files = resource.files(search_aggregations=True)
-    print(f">> files in resource: {files}", flush=True)
     hs_file_relative_path = hs_file_path.split(f"{resource_id}/data/contents/", 1)[1]
-    print(f">> hs_file_relative_path: {hs_file_relative_path}", flush=True)
     if hs_file_relative_path in files:
         err_msg = f'File {hs_file_path} already exists in HydroShare resource: {resource_id}'
         return {"error": err_msg}
     file_folder = os.path.dirname(hs_file_relative_path)
-    print(f">> file_folder: {file_folder}", flush=True)
     # TODO: This path here I am hard coding as this is path I am setting as the notebook-dir when locally running
     #  jupyter lab --debug --notebook-dir=D:\Temp\hs_on_jupyter
     #  In 2i2c environment, this path join won't be necessary
@@ -73,9 +68,7 @@ async def upload_file_to_hydroshare(file_path):
 
 
 async def get_resource_id(file_path):
-    print(f">> file_path: {file_path}", flush=True)
     if file_path.startswith('Downloads/'):
         res_id = file_path.split('/')[1]
         return res_id
     raise ValueError('Invalid file path')
-

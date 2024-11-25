@@ -10,9 +10,7 @@ class UploadHandler(APIHandler):
     async def post(self):
         data = self.get_json_body()
         file_path = data['path']
-        print(f">> Uploading file: {file_path}")
         response = await upload_file_to_hydroshare(file_path)
-        print(f">> HS File Upload Response: {response}")
         await self.finish(json.dumps({"response": response}))
 
 
