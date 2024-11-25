@@ -6,7 +6,5 @@ __pycache__/
 .DS_Store
 .idea/
 .venv/
-frontend/node_modules/
-frontend/lib/
 build/
 dist/
