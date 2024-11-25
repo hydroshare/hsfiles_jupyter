@@ -1,6 +1,6 @@
-# My JupyterLab Extension
+# hsfiles_jupyter
+A JupyterLab extension for managing HydroShare resource files in JupyterLab
 
-This project adds a custom context menu option to JupyterLab to upload files to a remote server using the `hsclient` Python module.
 
 ## Setup
 
@@ -12,9 +12,10 @@ This project adds a custom context menu option to JupyterLab to upload files to 
 
 ### Backend
 
-1. Navigate to the `hs_file_upload_jupyterlab_extension` directory (project root).
+1. Navigate to the `hsfiles_jupyter` directory (project root).
 2. Run `pip install -e .` to install the server extension.
-3. Run `jupyter server extension enable --py hs_file_upload_jupyterlab_extension`.
+3. Run `jupyter server extension enable hsfiles_jupyter` to enable the server extension.
+4. Run `jupyter lab build` to build the frontend assets.
 
 ## Usage
 
