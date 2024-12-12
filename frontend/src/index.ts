@@ -2,7 +2,7 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
+import {FileBrowser, IFileBrowserFactory} from '@jupyterlab/filebrowser';
 import { showDialog, Dialog, Spinner } from '@jupyterlab/apputils';
 import { ServerConnection  } from '@jupyterlab/services';
 import { URLExt } from '@jupyterlab/coreutils';
@@ -37,6 +37,20 @@ const extension: JupyterFrontEndPlugin<void> = {
     const { commands } = app;
     const { tracker } = factory;
 
+
+    // Function to disable the file browser
+    function disableFileBrowser(fileBrowser: FileBrowser) {
+      fileBrowser.node.style.pointerEvents = 'none'; // Disable interactions
+      fileBrowser.node.style.opacity = '0.5'; // Optional: Indicate disabled state visually
+      console.log('File browser disabled');
+    }
+
+    // Function to enable the file browser
+    function enableFileBrowser(fileBrowser: FileBrowser) {
+      fileBrowser.node.style.pointerEvents = 'auto'; // Restore interactions
+      fileBrowser.node.style.opacity = '1'; // Restore original appearance
+      console.log('File browser enabled');
+    }
     commands.addCommand('upload-to-hydroshare', {
       label: 'Upload File to Hydroshare',
       execute: async () => {
@@ -45,6 +59,9 @@ const extension: JupyterFrontEndPlugin<void> = {
           const selectedItem = widget.selectedItems().next();
           if(selectedItem && selectedItem.value) {
             const path = selectedItem.value.path;
+            // get the file browser and disable it
+            const fileBrowser = tracker.currentWidget;
+            disableFileBrowser(fileBrowser);
 
             // new spinner widget
             const spinnerWidget = new SpinnerWidget();
@@ -81,6 +98,8 @@ const extension: JupyterFrontEndPlugin<void> = {
               }
             } finally {
               spinnerWidget.dispose();
+              // get the file browser and enable it
+              enableFileBrowser(fileBrowser);
             }
           }
         }
@@ -94,6 +113,9 @@ const extension: JupyterFrontEndPlugin<void> = {
           const selectedItem = widget.selectedItems().next();
           if(selectedItem && selectedItem.value) {
             const path = selectedItem.value.path;
+            // get the file browser and disable it
+            const fileBrowser = tracker.currentWidget;
+            disableFileBrowser(fileBrowser);
 
             // new spinner widget
             const spinnerWidget = new SpinnerWidget();
@@ -130,6 +152,8 @@ const extension: JupyterFrontEndPlugin<void> = {
               }
             } finally {
               spinnerWidget.dispose();
+              // get the file browser and enable it
+              enableFileBrowser(fileBrowser);
             }
           }
         }
@@ -145,7 +169,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       selector: '.jp-DirListing-item[data-isdir="false"]',
       rank: 1.7
     });
-    // add command was here
   }
 };
 
