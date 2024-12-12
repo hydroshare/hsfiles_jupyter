@@ -47,3 +47,11 @@ def get_notebook_dir():
     # Get the current server application instance
     server_app = ServerApp.instance()
     return server_app.root_dir
+
+
+async def get_resource(file_path):
+    file_path = Path(file_path).as_posix()
+    resource_id = await get_resource_id(file_path)
+    hs_client = await get_hsclient_instance()
+    resource = hs_client.resource(resource_id=resource_id)
+    return resource

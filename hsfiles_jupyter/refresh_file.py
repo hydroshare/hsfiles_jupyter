@@ -2,8 +2,7 @@ import os
 from pathlib import Path
 
 from .utils import (
-    get_resource_id,
-    get_hsclient_instance,
+    get_resource,
     get_hs_resource_data_path,
     get_notebook_dir,
 )
@@ -13,17 +12,14 @@ async def refresh_file_from_hydroshare(file_path):
     """Download the file 'file_path' from HydroShare and overwrite the local file"""
 
     file_path = Path(file_path).as_posix()
-    resource_id = await get_resource_id(file_path)
-    hs_client = await get_hsclient_instance()
-    # get the hydroshare resource to which the file will be uploaded
-    resource = hs_client.resource(resource_id=resource_id)
-
+    # get the hydroshare resource from which the file will be refreshed
+    resource = await get_resource(file_path)
+    resource_id = resource.resource_id
     hs_file_path = file_path.split(resource_id, 1)[1]
     hs_file_path = hs_file_path.lstrip('/')
     # add resource id to the file path if it doesn't already start with it
     if not hs_file_path.startswith(resource_id):
-        hs_file_path = Path(resource_id) / hs_file_path
-        hs_file_path = hs_file_path.as_posix()
+        hs_file_path = (Path(resource_id) / hs_file_path).as_posix()
     # get all files in the resource to check if the file to be refreshed exists in the resource
     resource.refresh()
     files = resource.files(search_aggregations=True)
@@ -36,8 +32,7 @@ async def refresh_file_from_hydroshare(file_path):
 
     notebook_root_dir = get_notebook_dir()
     file_dir = os.path.dirname(file_path)
-    downloaded_file_path = Path(notebook_root_dir) / file_dir
-    downloaded_file_path = downloaded_file_path.as_posix()
+    downloaded_file_path = (Path(notebook_root_dir) / file_dir).as_posix()
     try:
         resource.file_download(path=hs_file_relative_path, save_path=downloaded_file_path)
         success_msg = f'File {hs_file_path} refreshed successfully from HydroShare resource: {resource_id}'

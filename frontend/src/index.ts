@@ -135,7 +135,7 @@ const extension: JupyterFrontEndPlugin<void> = {
               console.log('File refreshed from HydroShare successfully:', path);
               // Show success message
               await showDialog({
-                title: 'Refresh from HydroShare was Successful',
+                title: 'File Refresh from HydroShare was Successful',
                 body: `${response.success}`,
                 buttons: [Dialog.okButton({label: 'OK'})]
               });
@@ -143,12 +143,66 @@ const extension: JupyterFrontEndPlugin<void> = {
               if (error instanceof Error) {
                 console.error('Failed to refresh file from HydroShare:', error.message);
                 await showDialog({
-                  title: 'Refresh from HydroShare Failed',
+                  title: 'File Refresh from HydroShare Failed',
                   body: ` Error: ${error.message}.`,
                   buttons: [Dialog.okButton({label: 'OK'})]
                 });
               } else {
                 console.error('Failed to refresh file from HydroShare:', error);
+              }
+            } finally {
+              spinnerWidget.dispose();
+              // get the file browser and enable it
+              enableFileBrowser(fileBrowser);
+            }
+          }
+        }
+      }
+    });
+    commands.addCommand('delete-file-from-hydroshare', {
+      label: `Delete File` + ` from Hydroshare`,
+      execute: async () => {
+        const widget = tracker.currentWidget;
+        if (widget) {
+          const selectedItem = widget.selectedItems().next();
+          if(selectedItem && selectedItem.value) {
+            const path = selectedItem.value.path;
+            // get the file browser and disable it
+            const fileBrowser = tracker.currentWidget;
+            disableFileBrowser(fileBrowser);
+
+            // new spinner widget
+            const spinnerWidget = new SpinnerWidget();
+            // Set a unique id for the SpinnerWidget
+            spinnerWidget.id = 'spinner-widget';
+            app.shell.add(spinnerWidget, 'main');
+            // show spinner
+            spinnerWidget.node.style.display = 'block';
+
+            try {
+              const response = await requestAPI<any>('delete', {
+                method: 'POST',
+                body: JSON.stringify({path})
+              });
+              // hide spinner
+              spinnerWidget.node.style.display = 'none';
+              console.log('File deleted from HydroShare successfully:', path);
+              // Show success message
+              await showDialog({
+                title: `Delete` +  ` from HydroShare was Successful`,
+                body: `${response.success}`,
+                buttons: [Dialog.okButton({label: 'OK'})]
+              });
+            } catch (error) {
+              if (error instanceof Error) {
+                console.error('Failed to delete file from HydroShare:', error.message);
+                await showDialog({
+                  title: `Delete` +  ` from HydroShare Failed`,
+                  body: ` Error: ${error.message}.`,
+                  buttons: [Dialog.okButton({label: 'OK'})]
+                });
+              } else {
+                console.error('Failed to delete file from HydroShare:', error);
               }
             } finally {
               spinnerWidget.dispose();
@@ -168,6 +222,11 @@ const extension: JupyterFrontEndPlugin<void> = {
       command: 'refresh-from-hydroshare',
       selector: '.jp-DirListing-item[data-isdir="false"]',
       rank: 1.7
+    });
+    app.contextMenu.addItem({
+      command: 'delete-file-from-hydroshare',
+      selector: '.jp-DirListing-item[data-isdir="false"]',
+      rank: 1.8
     });
   }
 };

@@ -2,8 +2,7 @@ import os
 from pathlib import Path
 
 from .utils import (
-    get_hsclient_instance,
-    get_resource_id,
+    get_resource,
     get_notebook_dir,
     get_hs_resource_data_path,
 )
@@ -13,17 +12,14 @@ async def upload_file_to_hydroshare(file_path):
     """Uploads a file 'file_path' to a HydroShare resource"""
 
     file_path = Path(file_path).as_posix()
-    resource_id = await get_resource_id(file_path)
-    hs_client = await get_hsclient_instance()
     # get the hydroshare resource to which the file will be uploaded
-    resource = hs_client.resource(resource_id=resource_id)
-
+    resource = await get_resource(file_path)
+    resource_id = resource.resource_id
     hs_file_path = file_path.split(resource_id, 1)[1]
     hs_file_path = hs_file_path.lstrip('/')
     # add resource id to the file path if it doesn't already start with it
     if not hs_file_path.startswith(resource_id):
-        hs_file_path = Path(resource_id) / hs_file_path
-        hs_file_path = hs_file_path.as_posix()
+        hs_file_path = (Path(resource_id) / hs_file_path).as_posix()
 
     # get all files in the resource to check if the file to be uploaded already exists in the resource
     resource.refresh()
@@ -37,8 +33,8 @@ async def upload_file_to_hydroshare(file_path):
 
     file_folder = os.path.dirname(hs_file_relative_path)
     notebook_root_dir = get_notebook_dir()
-    absolute_file_path = Path(notebook_root_dir) / file_path
-    absolute_file_path = absolute_file_path.as_posix()
+    absolute_file_path = (Path(notebook_root_dir) / file_path).as_posix()
+
     try:
         resource.file_upload(absolute_file_path, destination_path=file_folder)
         success_msg = f'File {hs_file_path} uploaded successfully to HydroShare resource: {resource_id}'
