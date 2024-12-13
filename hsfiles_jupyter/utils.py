@@ -67,3 +67,14 @@ async def get_resource(file_path):
     hs_client = await get_hsclient_instance()
     resource = hs_client.resource(resource_id=resource_id)
     return resource
+
+
+async def get_hs_file_path(file_path):
+    file_path = Path(file_path).as_posix()
+    resource_id = await get_resource_id(file_path)
+    hs_file_path = file_path.split(resource_id, 1)[1]
+    hs_file_path = hs_file_path.lstrip('/')
+    # add resource id to the file path if it doesn't already start with it
+    if not hs_file_path.startswith(resource_id):
+        hs_file_path = (Path(resource_id) / hs_file_path).as_posix()
+    return hs_file_path

@@ -3,6 +3,7 @@ from pathlib import Path
 
 from .utils import (
     get_resource,
+    get_resource_files,
     get_notebook_dir,
     get_hs_resource_data_path,
     get_hs_file_path,
@@ -16,12 +17,7 @@ async def upload_file_to_hydroshare(file_path):
     # get the hydroshare resource to which the file will be uploaded
     resource = await get_resource(file_path)
     resource_id = resource.resource_id
-    hs_file_path = file_path.split(resource_id, 1)[1]
-    hs_file_path = hs_file_path.lstrip('/')
-    # add resource id to the file path if it doesn't already start with it
-    if not hs_file_path.startswith(resource_id):
-        hs_file_path = (Path(resource_id) / hs_file_path).as_posix()
-
+    hs_file_path = await get_hs_file_path(file_path)
     # get all files in the resource to check if the file to be uploaded already exists in the resource
     files = await get_resource_files(resource)
     hs_data_path = get_hs_resource_data_path(resource_id)
