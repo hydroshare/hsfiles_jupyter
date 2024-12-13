@@ -5,6 +5,7 @@ from .utils import (
     get_resource,
     get_notebook_dir,
     get_hs_resource_data_path,
+    get_hs_file_path,
 )
 
 
@@ -22,8 +23,7 @@ async def upload_file_to_hydroshare(file_path):
         hs_file_path = (Path(resource_id) / hs_file_path).as_posix()
 
     # get all files in the resource to check if the file to be uploaded already exists in the resource
-    resource.refresh()
-    files = resource.files(search_aggregations=True)
+    files = await get_resource_files(resource)
     hs_data_path = get_hs_resource_data_path(resource_id)
     hs_data_path = hs_data_path.as_posix() + "/"
     hs_file_relative_path = hs_file_path.split(hs_data_path, 1)[1]

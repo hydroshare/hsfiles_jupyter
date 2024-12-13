@@ -31,6 +31,18 @@ async def get_hsclient_instance():
     return HydroShare(username=username, password=password)
 
 
+@alru_cache(maxsize=None, ttl=600)
+async def refresh_resource(resource):
+    resource.refresh()
+
+
+@alru_cache(maxsize=None, ttl=600)
+async def get_resource_files(resource):
+    resource.refresh()
+    files = resource.files(search_aggregations=True)
+    return files
+
+
 async def get_resource_id(file_path):
     if file_path.startswith('Downloads/'):
         res_id = file_path.split('/')[1]
