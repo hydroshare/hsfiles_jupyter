@@ -1,9 +1,9 @@
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-
+from datetime import datetime
 from async_lru import alru_cache
 from hsclient import HydroShare
 from hsclient.hydroshare import Resource
@@ -20,6 +20,7 @@ class ResourceFilesCache:
     """A class to manage a file cache for files in a HydroShare resource."""
     _file_paths: list[str]
     _resource: Resource
+    _refreshed_at: datetime = field(default_factory=datetime.now)
 
     def update_files_cache(self, file_path: str, update_type: FileCacheUpdateType) -> None:
         if update_type == FileCacheUpdateType.ADD:
@@ -30,9 +31,13 @@ class ResourceFilesCache:
     def load_files_to_cache(self) -> None:
         self._resource.refresh()
         self._file_paths = self._resource.files(search_aggregations=True)
+        self._refreshed_at = datetime.now()
 
     def get_files(self) -> list[str]:
         return self._file_paths
+
+    def is_due_for_refresh(self) -> bool:
+        return (datetime.now() - self._refreshed_at).total_seconds() > 60
 
     @property
     def resource(self) -> Resource:
@@ -62,8 +67,13 @@ class ResourceFileCacheManager:
         resource_file_cache = self.get_resource_file_cache(resource)
         if resource_file_cache is not None:
             if not refresh:
+                refresh = resource_file_cache.is_due_for_refresh()
+            if not refresh:
+                # letting the caller know that the cache doesn't need to be refreshed
+                refresh = True
                 return resource_file_cache.get_files(), refresh
             else:
+                # caller wants to refresh
                 resource_file_cache.load_files_to_cache()
                 refresh = True
                 return resource_file_cache.get_files(), refresh
