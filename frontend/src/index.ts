@@ -106,7 +106,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     });
     commands.addCommand('refresh-from-hydroshare', {
-      label: 'Refresh from Hydroshare',
+      label: 'Refresh File from Hydroshare',
       execute: async () => {
         const widget = tracker.currentWidget;
         if (widget) {
@@ -213,6 +213,61 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
       }
     });
+    commands.addCommand('check-file-status-with-hydroshare', {
+      label: `Check File Status` + ` with Hydroshare`,
+      execute: async () => {
+        const widget = tracker.currentWidget;
+        if (widget) {
+          const selectedItem = widget.selectedItems().next();
+          if(selectedItem && selectedItem.value) {
+            const path = selectedItem.value.path;
+            // get the file browser and disable it
+            const fileBrowser = tracker.currentWidget;
+            disableFileBrowser(fileBrowser);
+
+            // new spinner widget
+            const spinnerWidget = new SpinnerWidget();
+            // Set a unique id for the SpinnerWidget
+            spinnerWidget.id = 'spinner-widget';
+            app.shell.add(spinnerWidget, 'main');
+            // show spinner
+            spinnerWidget.node.style.display = 'block';
+
+            try {
+              const response = await requestAPI<any>('status', {
+                method: 'POST',
+                body: JSON.stringify({path})
+              });
+              // hide spinner
+              spinnerWidget.node.style.display = 'none';
+              console.log('File status checked with HydroShare successfully:', path);
+              // Show success message
+              const status = response.status;
+              await showDialog({
+                title: `File Status:` + `${status}`,
+                body: `${response.success}`,
+                buttons: [Dialog.okButton({label: 'OK'})]
+              });
+            } catch (error) {
+              if (error instanceof Error) {
+                console.error('Failed to check file status with HydroShare:', error.message);
+                await showDialog({
+                  title: `Check File Status` +  ` with HydroShare Failed`,
+                  body: ` Error: ${error.message}.`,
+                  buttons: [Dialog.okButton({label: 'OK'})]
+                });
+              } else {
+                console.error('Failed to check file status with HydroShare:', error);
+              }
+            } finally {
+              spinnerWidget.dispose();
+              // get the file browser and enable it
+              enableFileBrowser(fileBrowser);
+            }
+          }
+        }
+      }
+    });
     app.contextMenu.addItem({
       command: 'upload-to-hydroshare',
       selector: '.jp-DirListing-item[data-isdir="false"]',
@@ -227,6 +282,11 @@ const extension: JupyterFrontEndPlugin<void> = {
       command: 'delete-file-from-hydroshare',
       selector: '.jp-DirListing-item[data-isdir="false"]',
       rank: 1.8
+    });
+    app.contextMenu.addItem({
+      command: 'check-file-status-with-hydroshare',
+      selector: '.jp-DirListing-item[data-isdir="false"]',
+      rank: 1.9
     });
   }
 };
