@@ -11,7 +11,7 @@ from .utils import (
 
 
 async def delete_file_from_hydroshare(file_path: str):
-    """Deletes a file 'file_path' from HydroShare resource"""
+    """Deletes a file 'file_path' from HydroShare resource as well as from the local filesystem."""
 
     file_path = Path(file_path).as_posix()
     # get the hydroshare resource from which the file will be deleted
