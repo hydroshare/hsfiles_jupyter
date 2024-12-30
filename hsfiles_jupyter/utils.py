@@ -10,6 +10,10 @@ from hsclient.hydroshare import Resource
 from jupyter_server.serverapp import ServerApp
 
 
+class HydroShareAuthError(Exception):
+    """Exception raised for errors in the HydroShare authentication."""
+    pass
+
 class FileCacheUpdateType(Enum):
     ADD = 1
     DELETE = 2
@@ -46,6 +50,7 @@ class ResourceFilesCache:
 
 class ResourceFileCacheManager:
     """ A class to manage resource file caches for multiple HydroShare resources."""
+
     resource_file_caches: list[ResourceFilesCache] = []
     _instance: "ResourceFileCacheManager" = None
 
@@ -98,10 +103,10 @@ class ResourceFileCacheManager:
         if file_path.startswith('Downloads/'):
             resource_id = file_path.split('/')[1]
             if len(resource_id) != 32:
-                raise ValueError('Invalid file path')
+                raise ValueError('Invalid resource file path')
             resource = await self.get_resource(resource_id)
             return resource
-        raise ValueError('Invalid file path')
+        raise ValueError('Invalid resource file path')
 
     def update_resource_files_cache(self, *, resource: Resource, file_path: str,
                                     update_type: FileCacheUpdateType) -> None:
