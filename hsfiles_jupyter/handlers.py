@@ -8,40 +8,39 @@ from .delete_file import delete_file_from_hydroshare
 from .check_file_status import check_file_status
 
 
-class UploadFileHandler(APIHandler):
+class BaseFileHandler(APIHandler):
+    async def handle_request(self, operation):
+        try:
+            data = self.get_json_body()
+            file_path = data['path']
+            response = await operation(file_path)
+            await self.finish(json.dumps({"response": response}))
+        except Exception as e:
+            self.set_status(500)
+            await self.finish(json.dumps({"response": {"error": str(e)}}))
+
+class UploadFileHandler(BaseFileHandler):
     @web.authenticated
     async def post(self):
-        data = self.get_json_body()
-        file_path = data['path']
-        response = await upload_file_to_hydroshare(file_path)
-        await self.finish(json.dumps({"response": response}))
+        await self.handle_request(upload_file_to_hydroshare)
 
 
-class RefreshFileHandler(APIHandler):
+class RefreshFileHandler(BaseFileHandler):
     @web.authenticated
     async def post(self):
-        data = self.get_json_body()
-        file_path = data['path']
-        response = await refresh_file_from_hydroshare(file_path)
-        await self.finish(json.dumps({"response": response}))
+        await self.handle_request(refresh_file_from_hydroshare)
 
 
-class DeleteFileHandler(APIHandler):
+class DeleteFileHandler(BaseFileHandler):
     @web.authenticated
     async def post(self):
-        data = self.get_json_body()
-        file_path = data['path']
-        response = await delete_file_from_hydroshare(file_path)
-        await self.finish(json.dumps({"response": response}))
+        await self.handle_request(delete_file_from_hydroshare)
 
 
-class CheckFileStatusHandler(APIHandler):
+class CheckFileStatusHandler(BaseFileHandler):
     @web.authenticated
     async def post(self):
-        data = self.get_json_body()
-        file_path = data['path']
-        response = await check_file_status(file_path)
-        await self.finish(json.dumps({"response": response}))
+        await self.handle_request(check_file_status)
 
 
 def setup_handlers(web_app):
