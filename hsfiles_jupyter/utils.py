@@ -63,24 +63,25 @@ class ResourceFileCacheManager:
     def get_resource_file_cache(self, resource: Resource) -> ResourceFilesCache:
         return next((rc for rc in self.resource_file_caches if rc.resource.resource_id == resource.resource_id), None)
 
+
     def get_files(self, resource: Resource, refresh=False) -> (list, bool):
+        """Get a list of file paths in a HydroShare resource. If the cache is up to date, return the cached files."""
+
         resource_file_cache = self.get_resource_file_cache(resource)
-        if resource_file_cache is not None:
-            if not refresh:
-                refresh = resource_file_cache.is_due_for_refresh()
-            if not refresh:
-                # letting the caller know that the cache doesn't need to be refreshed
-                refresh = True
-                return resource_file_cache.get_files(), refresh
-            else:
-                # caller wants to refresh
-                resource_file_cache.load_files_to_cache()
-                refresh = True
-                return resource_file_cache.get_files(), refresh
-        else:
+        if resource_file_cache is None:
             rfc = self.create_resource_file_cache(resource)
-            refresh = True
-            return rfc.get_files(), refresh
+            return rfc.get_files(), True
+
+        if not refresh:
+            refresh = resource_file_cache.is_due_for_refresh()
+            if not refresh:
+                # letting the caller know that the cache doesn't need to be refreshed - it's up to date
+                return resource_file_cache.get_files(), True
+
+        if refresh:
+            resource_file_cache.load_files_to_cache()
+
+        return resource_file_cache.get_files(), refresh
 
     async def get_resource(self, resource_id) -> Resource:
         resource = next((rc.resource for rc in self.resource_file_caches if rc.resource.resource_id == resource_id), None)
@@ -113,13 +114,16 @@ class ResourceFileCacheManager:
 
 @lru_cache(maxsize=None)
 def get_credentials():
-    home_dir = os.path.expanduser("~")
-    user_file = os.path.join(home_dir, '.hs_user')
-    pass_file = os.path.join(home_dir, '.hs_pass')
+    """The Hydroshare user credentials files used here are created by nbfetch as part of resource
+    open with Jupyter functionality, This extension depends on those files for user credentials."""
+
+    home_dir = Path.home()
+    user_file = home_dir / '.hs_user'
+    pass_file = home_dir / '.hs_pass'
 
     for f in [user_file, pass_file]:
         if not os.path.exists(f):
-            raise FileNotFoundError(f"{f} does not exist")
+            raise HydroShareAuthError(f"User credentials for HydroShare was not found")
 
     with open(user_file, 'r') as uf:
         username = uf.read().strip()
@@ -140,9 +144,9 @@ def get_resource_id(file_path):
     if file_path.startswith('Downloads/'):
         res_id = file_path.split('/')[1]
         if len(res_id) != 32:
-            raise ValueError('Invalid file path')
+            raise ValueError('Invalid resource file path')
         return res_id
-    raise ValueError('Invalid file path')
+    raise ValueError('Invalid resource file path')
 
 
 def get_hs_resource_data_path(resource_id) -> Path:
