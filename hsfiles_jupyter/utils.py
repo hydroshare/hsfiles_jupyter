@@ -18,6 +18,37 @@ class FileCacheUpdateType(Enum):
     ADD = 1
     DELETE = 2
 
+@dataclass
+class HydroShareResourceInfo:
+    resource: Resource
+    resource_id: str
+    hs_file_path: str
+    files: list
+    refresh: bool
+    hs_file_relative_path: str
+
+async def get_hydroshare_resource_info(file_path: str) -> HydroShareResourceInfo:
+    """Get HydroShare resource information for a given file path."""
+    file_path = Path(file_path).as_posix()
+    # get the hydroshare resource to which the file will be uploaded
+    rfc_manager = ResourceFileCacheManager()
+    resource = await rfc_manager.get_resource_from_file_path(file_path)
+
+    resource_id = resource.resource_id
+    hs_file_path = get_hs_file_path(file_path)
+
+    # get all files in the resource to check if the file to be acted on already exists in the resource
+    files, refresh = rfc_manager.get_files(resource)
+    hs_data_path = get_hs_resource_data_path(resource_id).as_posix() + "/"
+    hs_file_relative_path = hs_file_path.split(hs_data_path, 1)[1]
+    return HydroShareResourceInfo(
+        resource=resource,
+        resource_id=resource_id,
+        hs_file_path=hs_file_path,
+        files=files,
+        refresh=refresh,
+        hs_file_relative_path=hs_file_relative_path
+    )
 
 @dataclass
 class ResourceFilesCache:
