@@ -6,6 +6,7 @@ from .utils import (
     get_hydroshare_resource_info,
     FileCacheUpdateType,
     ResourceFileCacheManager,
+    logger,
 )
 
 
@@ -36,4 +37,5 @@ async def upload_file_to_hydroshare(file_path: str):
             return {"error": err_msg}
         err_msg = (f'Failed to upload file: {res_info.hs_file_path} to HydroShare resource: {res_info.resource_id}.'
                    f' Error: {hs_error}')
+        logger.error(err_msg)
         return {"error": err_msg}

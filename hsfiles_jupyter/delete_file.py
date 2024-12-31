@@ -6,6 +6,7 @@ from .utils import (
     get_hydroshare_resource_info,
     FileCacheUpdateType,
     ResourceFileCacheManager,
+    logger,
 )
 
 
@@ -39,6 +40,7 @@ async def delete_file_from_hydroshare(file_path: str):
         hs_error = str(e)
         err_msg = (f'Failed to delete file: {res_info.hs_file_path} from HydroShare'
                    f' resource: {res_info.resource_id}. Error: {hs_error}')
+        logger.error(err_msg)
         return {"error": err_msg}
     try:
         # deleting from local filesystem
@@ -48,4 +50,5 @@ async def delete_file_from_hydroshare(file_path: str):
         os_error = str(e)
         err_msg = (f'File {res_info.hs_file_path} was deleted from HydroShare resource: {res_info.resource_id}\n.'
                    f' NOTE: However, the local file could not be deleted. Error: {os_error}')
+        logger.error(err_msg)
         return {"success": err_msg}

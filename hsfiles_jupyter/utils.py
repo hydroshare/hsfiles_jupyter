@@ -1,13 +1,32 @@
+import logging
 import os
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from functools import lru_cache
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from datetime import datetime
+
 from async_lru import alru_cache
 from hsclient import HydroShare
 from hsclient.hydroshare import Resource
 from jupyter_server.serverapp import ServerApp
+
+# Configure logging
+log_file_path = Path.home() / '.hsfiles_jupyter.log'
+handler = RotatingFileHandler(
+    filename=log_file_path,
+    maxBytes=1024*1024,  # 1 MB
+    backupCount=3,  # Keep 3 backup files
+    encoding='utf-8'
+)
+handler.setLevel(logging.ERROR)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+logger.addHandler(handler)
 
 
 class HydroShareAuthError(Exception):
@@ -119,25 +138,33 @@ class ResourceFileCacheManager:
 
         return resource_file_cache.get_files(), refresh
 
-    async def get_resource(self, resource_id) -> Resource:
-        resource = next((rc.resource for rc in self.resource_file_caches if rc.resource.resource_id == resource_id), None)
+    async def get_resource(self, resource_id: str) -> Resource:
+        resource = next(
+            (rc.resource for rc in self.resource_file_caches if rc.resource.resource_id == resource_id), None
+        )
         if resource is not None:
             return resource
 
         hs_client = await get_hsclient_instance()
-        resource = hs_client.resource(resource_id=resource_id)
+        try:
+            resource = hs_client.resource(resource_id=resource_id)
+        except Exception as e:
+            hs_err_msg = str(e)
+            if '404' in hs_err_msg:
+                err_msg = f"Resource with id {resource_id} was not found in Hydroshare"
+            else:
+                err_msg = f"Failed to get resource from Hydroshare with id {resource_id}"
+
+            logger.error(f"{err_msg}. Error: {hs_err_msg}")
+            raise ValueError(err_msg)
         self.create_resource_file_cache(resource)
         return resource
 
     async def get_resource_from_file_path(self, file_path) -> Resource:
         file_path = Path(file_path).as_posix()
-        if file_path.startswith('Downloads/'):
-            resource_id = file_path.split('/')[1]
-            if len(resource_id) != 32:
-                raise ValueError('Invalid resource file path')
-            resource = await self.get_resource(resource_id)
-            return resource
-        raise ValueError('Invalid resource file path')
+        resource_id = get_resource_id(file_path)
+        resource = await self.get_resource(resource_id)
+        return resource
 
     def update_resource_files_cache(self, *, resource: Resource, file_path: str,
                                     update_type: FileCacheUpdateType) -> None:
@@ -145,11 +172,14 @@ class ResourceFileCacheManager:
         if resource_file_cache is not None:
             resource_file_cache.update_files_cache(file_path, update_type)
         else:
-            raise ValueError(f"Resource file cache not found for resource: {resource.resource_id}")
+            # This should not happen
+            err_msg = (f"Failed to update file list cache. Resource file cache was not found for "
+                       f"resource: {resource.resource_id}")
+            logger.error(err_msg)
 
 
 @lru_cache(maxsize=None)
-def get_credentials():
+def get_credentials() -> (str, str):
     """The Hydroshare user credentials files used here are created by nbfetch as part of resource
     open with Jupyter functionality, This extension depends on those files for user credentials."""
 
@@ -159,6 +189,7 @@ def get_credentials():
 
     for f in [user_file, pass_file]:
         if not os.path.exists(f):
+            logger.error(f"User credentials file was not found: {f}")
             raise HydroShareAuthError(f"User credentials for HydroShare was not found")
 
     with open(user_file, 'r') as uf:
@@ -171,33 +202,38 @@ def get_credentials():
 
 
 @alru_cache(maxsize=None)
-async def get_hsclient_instance():
+async def get_hsclient_instance() -> HydroShare:
     username, password = get_credentials()
     return HydroShare(username=username, password=password)
 
 
-def get_resource_id(file_path):
+def get_resource_id(file_path: str) -> str:
+    log_err_msg = f"Resource id was not found in selected file path: {file_path}"
+    user_err_msg = "Invalid resource file path"
     if file_path.startswith('Downloads/'):
         res_id = file_path.split('/')[1]
         if len(res_id) != 32:
-            raise ValueError('Invalid resource file path')
+            logger.error(log_err_msg)
+            raise ValueError(user_err_msg)
         return res_id
-    raise ValueError('Invalid resource file path')
+
+    logger.error(log_err_msg)
+    raise ValueError(user_err_msg)
 
 
-def get_hs_resource_data_path(resource_id) -> Path:
+def get_hs_resource_data_path(resource_id: str) -> Path:
     hs_data_path = Path(resource_id) / "data" / "contents"
     return hs_data_path
 
 
 @lru_cache(maxsize=None)
-def get_notebook_dir():
+def get_notebook_dir() -> str:
     # Get the current server application instance
     server_app = ServerApp.instance()
     return server_app.root_dir
 
 
-def get_hs_file_path(file_path):
+def get_hs_file_path(file_path: str) -> str:
     file_path = Path(file_path).as_posix()
     resource_id = get_resource_id(file_path)
     hs_file_path = file_path.split(resource_id, 1)[1]

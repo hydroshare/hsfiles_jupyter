@@ -5,6 +5,7 @@ from .utils import (
     get_notebook_dir,
     get_hydroshare_resource_info,
     ResourceFileCacheManager,
+    logger,
 )
 
 
@@ -34,4 +35,5 @@ async def refresh_file_from_hydroshare(file_path: str):
         hs_error = str(e)
         err_msg = (f'Failed to refresh file: {res_info.hs_file_path} from HydroShare'
                    f' resource: {res_info.resource_id}. Error: {hs_error}')
+        logger.error(err_msg)
         return {"error": err_msg}
