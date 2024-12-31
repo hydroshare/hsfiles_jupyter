@@ -1,3 +1,5 @@
+from jupyter_server.serverapp import ServerApp
+
 try:
     from ._version import __version__
 except ImportError:
@@ -14,7 +16,7 @@ _EXTENSION_NAME = "hsfiles_jupyter"
 
 def _jupyter_labextension_paths():
     return [{
-        "src": "labextension",
+        "src": "frontend",
         "dest": _EXTENSION_NAME
     }]
 
@@ -25,7 +27,7 @@ def _jupyter_server_extension_points():
     }]
 
 
-def _load_jupyter_server_extension(server_app):
+def _load_jupyter_server_extension(server_app: ServerApp):
     """Registers the API handler to receive HTTP requests from the frontend extension.
 
     Parameters
@@ -36,5 +38,4 @@ def _load_jupyter_server_extension(server_app):
     from .handlers import setup_handlers
 
     setup_handlers(server_app.web_app)
-    name = _EXTENSION_NAME
-    server_app.log.info(f"Registered {name} server extension")
+    server_app.log.info(f"Registered {_EXTENSION_NAME} server extension")
