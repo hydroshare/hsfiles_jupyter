@@ -8,9 +8,4 @@ setup(
         'notebook',
         'hsclient'
     ],
-    entry_points={
-        'jupyter_serverproxy_servers': [
-            'upload = hsfiles_jupyter:setup_upload_handler'
-        ]
-    }
 )
