@@ -91,7 +91,8 @@ class ResourceFilesCache:
         return self._file_paths
 
     def is_due_for_refresh(self) -> bool:
-        return (datetime.now() - self._refreshed_at).total_seconds() > 60
+        refresh_interval = get_cache_refresh_interval()
+        return (datetime.now() - self._refreshed_at).total_seconds() > refresh_interval
 
     @property
     def resource(self) -> Resource:
@@ -242,3 +243,7 @@ def get_hs_file_path(file_path: str) -> str:
     if not hs_file_path.startswith(resource_id):
         hs_file_path = (Path(resource_id) / hs_file_path).as_posix()
     return hs_file_path
+
+@lru_cache(maxsize=None)
+def get_cache_refresh_interval() -> int:
+    return int(os.getenv('CACHE_REFRESH_INTERVAL', 180))
