@@ -92,12 +92,12 @@ class ResourceFileCacheManager:
         if not hasattr(self, 'hs_client'):
             self.hs_client = get_hsclient_instance()
 
-    async def get_hydroshare_resource_info(self, file_path: str) -> HydroShareResourceInfo:
+    def get_hydroshare_resource_info(self, file_path: str) -> HydroShareResourceInfo:
         """Get HydroShare resource information for a given file path."""
         file_path = Path(file_path).as_posix()
         if not self.user_authorized():
             raise HydroShareAuthError("User is not authorized with HydroShare")
-        resource = await self.get_resource_from_file_path(file_path)
+        resource = self.get_resource_from_file_path(file_path)
 
         resource_id = resource.resource_id
         hs_file_path = get_hs_file_path(file_path)
@@ -147,7 +147,7 @@ class ResourceFileCacheManager:
 
         return resource_file_cache.get_files(), refresh
 
-    async def get_resource(self, resource_id: str) -> Resource:
+    def get_resource(self, resource_id: str) -> Resource:
         resource = next(
             (rc.resource for rc in self.resource_file_caches if rc.resource.resource_id == resource_id), None
         )
@@ -171,10 +171,10 @@ class ResourceFileCacheManager:
         self.create_resource_file_cache(resource)
         return resource
 
-    async def get_resource_from_file_path(self, file_path) -> Resource:
+    def get_resource_from_file_path(self, file_path) -> Resource:
         file_path = Path(file_path).as_posix()
         resource_id = get_resource_id(file_path)
-        resource = await self.get_resource(resource_id)
+        resource = self.get_resource(resource_id)
         return resource
 
     def update_resource_files_cache(self, *, resource: Resource, file_path: str,
