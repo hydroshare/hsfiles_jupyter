@@ -163,6 +163,8 @@ class ResourceFileCacheManager:
             hs_err_msg = str(e)
             if '404' in hs_err_msg:
                 err_msg = f"Resource with id {resource_id} was not found in Hydroshare"
+            elif '403' in hs_err_msg:
+                err_msg = f"You are not authorized to access this resource: {resource_id}"
             else:
                 err_msg = f"Failed to get resource from Hydroshare with id {resource_id}"
 
