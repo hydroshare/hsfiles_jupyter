@@ -7,7 +7,6 @@ from functools import lru_cache
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from async_lru import alru_cache
 from hsclient import HydroShare
 from hsclient.hydroshare import Resource
 from jupyter_server.serverapp import ServerApp
@@ -202,11 +201,16 @@ def get_credentials() -> (str, str):
     return username, password
 
 
-@alru_cache(maxsize=None)
-async def get_hsclient_instance() -> HydroShare:
+@lru_cache(maxsize=None)
+def get_hsclient_instance() -> Optional[HydroShare]:
     username, password = get_credentials()
-    return HydroShare(username=username, password=password)
-
+    try:
+        hs_client = HydroShare(username=username, password=password)
+        return hs_client
+    except Exception:
+        err_msg = "User authorization with HydroShare failed"
+        logger.error(err_msg)
+        return None
 
 def get_resource_id(file_path: str) -> str:
     log_err_msg = f"Resource id was not found in selected file path: {file_path}"
