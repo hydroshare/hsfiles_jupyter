@@ -1,30 +1,31 @@
 import os
-from pathlib import Path
 
 from .utils import (
-    get_notebook_dir,
-    get_hydroshare_resource_info,
     FileCacheUpdateType,
     ResourceFileCacheManager,
     logger,
+    HydroShareAuthError,
+    get_local_absolute_file_path,
 )
 
 
 async def upload_file_to_hydroshare(file_path: str):
     """Uploads a file 'file_path' to a HydroShare resource"""
 
-    res_info = await get_hydroshare_resource_info(file_path)
+    rfc_manager = ResourceFileCacheManager()
+    try:
+        res_info = await rfc_manager.get_hydroshare_resource_info(file_path)
+    except HydroShareAuthError as e:
+        return {"error": str(e)}
     if res_info.hs_file_relative_path in res_info.files:
         err_msg = f'File {res_info.hs_file_path} already exists in HydroShare resource: {res_info.resource_id}'
         return {"error": err_msg}
 
-    rfc_manager = ResourceFileCacheManager()
     file_folder = os.path.dirname(res_info.hs_file_relative_path)
-    notebook_root_dir = get_notebook_dir()
-    absolute_file_path = (Path(notebook_root_dir) / file_path).as_posix()
+    absolute_local_file_path = get_local_absolute_file_path(file_path)
 
     try:
-        res_info.resource.file_upload(absolute_file_path, destination_path=file_folder)
+        res_info.resource.file_upload(absolute_local_file_path, destination_path=file_folder)
         rfc_manager.update_resource_files_cache(resource=res_info.resource, file_path=res_info.hs_file_relative_path,
                                                 update_type=FileCacheUpdateType.ADD)
         success_msg = (f'File {res_info.hs_file_path} uploaded successfully to HydroShare'

@@ -1,19 +1,22 @@
 import os
-from pathlib import Path
 
 from .utils import (
-    get_notebook_dir,
-    get_hydroshare_resource_info,
     ResourceFileCacheManager,
     logger,
+    HydroShareAuthError,
+    get_local_absolute_file_path,
 )
 
 
 async def refresh_file_from_hydroshare(file_path: str):
     """Download the file 'file_path' from HydroShare and overwrite the local file"""
 
-    res_info = await get_hydroshare_resource_info(file_path)
     rfc_manager = ResourceFileCacheManager()
+    try:
+        res_info = await rfc_manager.get_hydroshare_resource_info(file_path)
+    except HydroShareAuthError as e:
+        return {"error": str(e)}
+
     if res_info.hs_file_relative_path not in res_info.files:
         file_not_found = True
         if not res_info.refresh:
@@ -23,9 +26,9 @@ async def refresh_file_from_hydroshare(file_path: str):
             err_msg = f'File {res_info.hs_file_path} is not found in HydroShare resource: {res_info.resource_id}'
             return {"error": err_msg}
 
-    notebook_root_dir = get_notebook_dir()
     file_dir = os.path.dirname(file_path)
-    downloaded_file_path = (Path(notebook_root_dir) / file_dir).as_posix()
+    downloaded_file_path = get_local_absolute_file_path(file_dir)
+
     try:
         res_info.resource.file_download(path=res_info.hs_file_relative_path, save_path=downloaded_file_path)
         success_msg = (f'File {res_info.hs_file_path} refreshed successfully from'

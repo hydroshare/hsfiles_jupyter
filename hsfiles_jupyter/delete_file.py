@@ -1,20 +1,23 @@
 import os
-from pathlib import Path
 
 from .utils import (
-    get_notebook_dir,
-    get_hydroshare_resource_info,
     FileCacheUpdateType,
     ResourceFileCacheManager,
     logger,
+    HydroShareAuthError,
+    get_local_absolute_file_path,
 )
 
 
 async def delete_file_from_hydroshare(file_path: str):
     """Deletes a file 'file_path' from HydroShare resource as well as from the local filesystem."""
 
-    res_info = await get_hydroshare_resource_info(file_path)
     rfc_manager = ResourceFileCacheManager()
+    try:
+        res_info = await rfc_manager.get_hydroshare_resource_info(file_path)
+    except HydroShareAuthError as e:
+        return {"error": str(e)}
+
     if res_info.hs_file_relative_path not in res_info.files:
         file_not_found = True
         if not res_info.refresh:
@@ -29,8 +32,7 @@ async def delete_file_from_hydroshare(file_path: str):
         err_msg = f"File {res_info.hs_file_path} doesn't exist in HydroShare resource: {res_info.resource_id}"
         return {"error": err_msg}
 
-    notebook_root_dir = get_notebook_dir()
-    local_file_to_delete_full_path = (Path(notebook_root_dir) / file_path).as_posix()
+    local_file_to_delete_full_path = get_local_absolute_file_path(file_path)
     try:
         # deleting from HydroShare
         res_info.resource.file_delete(hs_file_to_delete)

@@ -6,6 +6,7 @@ from enum import Enum
 from functools import lru_cache
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from typing import Optional
 
 from hsclient import HydroShare
 from hsclient.hydroshare import Resource
@@ -45,28 +46,6 @@ class HydroShareResourceInfo:
     refresh: bool
     hs_file_relative_path: str
 
-async def get_hydroshare_resource_info(file_path: str) -> HydroShareResourceInfo:
-    """Get HydroShare resource information for a given file path."""
-    file_path = Path(file_path).as_posix()
-    # get the hydroshare resource to which the file will be uploaded
-    rfc_manager = ResourceFileCacheManager()
-    resource = await rfc_manager.get_resource_from_file_path(file_path)
-
-    resource_id = resource.resource_id
-    hs_file_path = get_hs_file_path(file_path)
-
-    # get all files in the resource to check if the file to be acted on already exists in the resource
-    files, refresh = rfc_manager.get_files(resource)
-    hs_data_path = get_hs_resource_data_path(resource_id).as_posix() + "/"
-    hs_file_relative_path = hs_file_path.split(hs_data_path, 1)[1]
-    return HydroShareResourceInfo(
-        resource=resource,
-        resource_id=resource_id,
-        hs_file_path=hs_file_path,
-        files=files,
-        refresh=refresh,
-        hs_file_relative_path=hs_file_relative_path
-    )
 
 @dataclass
 class ResourceFilesCache:
@@ -109,6 +88,36 @@ class ResourceFileCacheManager:
             cls._instance = super().__new__(cls)
         return cls._instance
 
+    def __init__(self):
+        if not hasattr(self, 'hs_client'):
+            self.hs_client = get_hsclient_instance()
+
+    async def get_hydroshare_resource_info(self, file_path: str) -> HydroShareResourceInfo:
+        """Get HydroShare resource information for a given file path."""
+        file_path = Path(file_path).as_posix()
+        if not self.user_authorized():
+            raise HydroShareAuthError("User is not authorized with HydroShare")
+        resource = await self.get_resource_from_file_path(file_path)
+
+        resource_id = resource.resource_id
+        hs_file_path = get_hs_file_path(file_path)
+
+        # get all files in the resource to check if the file to be acted on already exists in the resource
+        files, refresh = self.get_files(resource)
+        hs_data_path = get_hs_resource_data_path(resource_id).as_posix() + "/"
+        hs_file_relative_path = hs_file_path.split(hs_data_path, 1)[1]
+        return HydroShareResourceInfo(
+            resource=resource,
+            resource_id=resource_id,
+            hs_file_path=hs_file_path,
+            files=files,
+            refresh=refresh,
+            hs_file_relative_path=hs_file_relative_path
+        )
+
+    def user_authorized(self) -> bool:
+        return self.hs_client is not None
+
     def create_resource_file_cache(self, resource: Resource) -> ResourceFilesCache:
         resource_file_cache = ResourceFilesCache(_file_paths=[], _resource=resource)
         self.resource_file_caches.append(resource_file_cache)
@@ -145,9 +154,11 @@ class ResourceFileCacheManager:
         if resource is not None:
             return resource
 
-        hs_client = await get_hsclient_instance()
+        if self.hs_client is None:
+            err_msg = "User is not authorized with HydroShare"
+            raise HydroShareAuthError(err_msg)
         try:
-            resource = hs_client.resource(resource_id=resource_id)
+            resource = self.hs_client.resource(resource_id=resource_id)
         except Exception as e:
             hs_err_msg = str(e)
             if '404' in hs_err_msg:
@@ -237,6 +248,9 @@ def get_notebook_dir() -> str:
     server_app = ServerApp.instance()
     return server_app.root_dir
 
+def get_local_absolute_file_path(file_path: str) -> str:
+    notebook_root_dir = get_notebook_dir()
+    return (Path(notebook_root_dir) / file_path).as_posix()
 
 def get_hs_file_path(file_path: str) -> str:
     file_path = Path(file_path).as_posix()
