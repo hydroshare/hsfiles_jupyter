@@ -126,16 +126,29 @@ const extension: JupyterFrontEndPlugin<void> = {
         });
 
         commands.addCommand('delete-file-from-hydroshare', {
-            label: `Delete File` + ` from Hydroshare`,
+            label: `Delete File` + ` from HydroShare`,
+            execute: async () => {
+                const result = await showDialog({
+                    title: 'Delete File',
+                    body: 'Deleting a file from HydroShare also deletes it from local disk - Are you sure you want to delete?',
+                    buttons: [
+                        Dialog.cancelButton({ label: 'Cancel' }),
+                        Dialog.okButton({ label: 'OK' })
+                    ],
+                    defaultButton: 0
+                });
 
-            execute: () => handleCommand(
-                app,
-                tracker,
-                `Delete file from` + ` HydroShare`,
-                'delete',
-                `Delete file from` + ` HydroShare was successful`,
-                response => `${response.success}`
-            )
+                if (result.button.label === 'OK') {
+                    await handleCommand(
+                        app,
+                        tracker,
+                        `Delete file from` + ` HydroShare`,
+                        'delete',
+                        `Delete file from` + ` HydroShare was successful`,
+                        response => `${response.success}`
+                    );
+                }
+            }
         });
 
         commands.addCommand('check-file-status-with-hydroshare', {
