@@ -196,6 +196,12 @@ def get_credentials() -> (str, str):
     """The Hydroshare user credentials files used here are created by nbfetch as part of resource
     open with Jupyter functionality, This extension depends on those files for user credentials."""
 
+    username = os.getenv('HS_USER')
+    password = os.getenv('HS_PASS')
+
+    if username and password:
+        return username, password
+
     home_dir = Path.home()
     user_file = home_dir / '.hs_user'
     pass_file = home_dir / '.hs_pass'
