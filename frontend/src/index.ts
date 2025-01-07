@@ -102,7 +102,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         const {tracker} = factory;
 
         commands.addCommand('upload-to-hydroshare', {
-            label: 'Upload File to Hydroshare',
+            label: 'Upload File to HydroShare',
             execute: () => handleCommand(
                 app,
                 tracker,
@@ -114,7 +114,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         });
 
         commands.addCommand('refresh-from-hydroshare', {
-            label: 'Refresh File from Hydroshare',
+            label: 'Refresh File from HydroShare',
             execute: () => handleCommand(
                 app,
                 tracker,
