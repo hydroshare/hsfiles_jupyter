@@ -15,12 +15,18 @@ async def check_file_status(file_path: str):
 
     success_response = {"success": f'File {res_info.hs_file_path} exists in HydroShare'
                                    f' resource: {res_info.resource_id}', "status": "Exists in HydroShare"}
-    if res_info.hs_file_relative_path in res_info.files:
-        return success_response
-    else:
-        if not res_info.refresh:
-            files, _ = rfc_manager.get_files(res_info.resource, refresh=True)
-            if res_info.hs_file_relative_path in files:
-                return success_response
-        return {"success": f'File {res_info.hs_file_path} does not exist in HydroShare'
-                           f' resource: {res_info.resource_id}', "status": "Does not exist in HydroShare"}
+    for res_file in res_info.files:
+        if res_info.hs_file_relative_path == res_file:
+            local_checksum = rfc_manager.compute_checksum(file_path)
+            if local_checksum == res_file.checksum:
+                success_response["status"] = "Exists in HydroShare and they are identical"
+            else:
+                success_response["status"] = "Exists in HydroShare but they are different"
+            return success_response
+
+    if not res_info.refresh:
+        files, _ = rfc_manager.get_files(res_info.resource, refresh=True)
+        if res_info.hs_file_relative_path in files:
+            return success_response
+    return {"success": f'File {res_info.hs_file_path} does not exist in HydroShare'
+                       f' resource: {res_info.resource_id}', "status": "Does not exist in HydroShare"}
