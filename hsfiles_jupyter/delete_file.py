@@ -18,17 +18,22 @@ async def delete_file_from_hydroshare(file_path: str):
     except HydroShareAuthError as e:
         return {"error": str(e)}
 
-    if res_info.hs_file_relative_path not in res_info.files:
-        file_not_found = True
+    hs_file_to_delete = None
+    # doing this loop to get an instance of the matching File object (hsclient) that can be passed to the file_delete()
+    # method of hsclient
+    for res_file in res_info.files:
+        if res_info.hs_file_relative_path == res_file:
+            hs_file_to_delete = res_file
+            break
+    else:
         if not res_info.refresh:
             files, _ = rfc_manager.get_files(res_info.resource, refresh=True)
-            file_not_found = res_info.hs_file_relative_path not in files
-        if file_not_found:
-            err_msg = f"File {res_info.hs_file_path} doesn't exist in HydroShare resource: {res_info.resource_id}"
-            return {"error": err_msg}
+            for res_file in files:
+                if res_info.hs_file_relative_path == res_file:
+                    hs_file_to_delete = res_file
+                    break
 
-    hs_file_to_delete = res_info.resource.file(path=res_info.hs_file_relative_path)
-    if not hs_file_to_delete:
+    if hs_file_to_delete is None:
         err_msg = f"File {res_info.hs_file_path} doesn't exist in HydroShare resource: {res_info.resource_id}"
         return {"error": err_msg}
 
