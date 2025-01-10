@@ -1,7 +1,6 @@
 import os
 
 from .utils import (
-    FileCacheUpdateType,
     ResourceFileCacheManager,
     logger,
     HydroShareAuthError,
@@ -26,8 +25,7 @@ async def upload_file_to_hydroshare(file_path: str):
 
     try:
         res_info.resource.file_upload(absolute_local_file_path, destination_path=file_folder)
-        rfc_manager.update_resource_files_cache(resource=res_info.resource, file_path=res_info.hs_file_relative_path,
-                                                update_type=FileCacheUpdateType.ADD)
+        rfc_manager.refresh_files_cache(res_info.resource)
         success_msg = (f'File {res_info.hs_file_path} uploaded successfully to HydroShare'
                        f' resource: {res_info.resource_id}')
         return {"success": success_msg}

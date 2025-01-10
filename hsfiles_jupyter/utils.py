@@ -1,5 +1,7 @@
+import hashlib
 import logging
 import os
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -147,6 +149,12 @@ class ResourceFileCacheManager:
 
         return resource_file_cache.get_files(), refresh
 
+
+    def refresh_files_cache(self, resource: Resource) -> None:
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            executor.submit(self.get_files, resource, refresh=True)
+
+
     def get_resource(self, resource_id: str) -> Resource:
         resource = next(
             (rc.resource for rc in self.resource_file_caches if rc.resource.resource_id == resource_id), None
@@ -190,6 +198,10 @@ class ResourceFileCacheManager:
                        f"resource: {resource.resource_id}")
             logger.error(err_msg)
 
+    @classmethod
+    def compute_checksum(cls, file_path: str):
+        md5_hash = calculate_md5(file_path)
+        return md5_hash
 
 @lru_cache(maxsize=None)
 def get_credentials() -> (str, str):
@@ -273,3 +285,15 @@ def get_hs_file_path(file_path: str) -> str:
 @lru_cache(maxsize=None)
 def get_cache_refresh_interval() -> int:
     return int(os.getenv('CACHE_REFRESH_INTERVAL', 180))
+
+
+def calculate_md5(file_path):
+    md5_hash = hashlib.md5()
+    buffer_size = 8192  # Read in chunks of 8KB
+    file_path = get_local_absolute_file_path(file_path)
+
+    with open(file_path, "rb") as file:
+        while chunk := file.read(buffer_size):
+            md5_hash.update(chunk)
+
+    return md5_hash.hexdigest()
