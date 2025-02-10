@@ -45,7 +45,8 @@ async function handleCommand(
     command: string,
     url: string,
     successTitle: string | ((response: any) => string),
-    successMessage: (response: any) => string
+    successMessage: (response: any) => string,
+    extraData: any = {}
 ) {
     const widget = tracker.currentWidget;
     if (widget) {
@@ -63,7 +64,7 @@ async function handleCommand(
             try {
                 const response = await requestAPI<any>(url, {
                     method: 'POST',
-                    body: JSON.stringify({path})
+                    body: JSON.stringify({path, ...extraData}),
                 });
                 spinnerWidget.node.style.display = 'none';
                 const title = typeof successTitle === 'function' ? successTitle(response) : successTitle;
@@ -128,9 +129,27 @@ const extension: JupyterFrontEndPlugin<void> = {
         commands.addCommand('delete-file-from-hydroshare', {
             label: `Delete File` + ` from HydroShare`,
             execute: async () => {
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = 'delete-local-file';
                 const result = await showDialog({
                     title: 'Delete File',
-                    body: 'Deleting a file from HydroShare also deletes it from local disk - Are you sure you want to delete?',
+                    body: new Widget({
+                        node: (() => {
+                            const div = document.createElement('div');
+                            const message = document.createElement('p');
+                            message.textContent = 'Are you sure you want to permanently delete this file from HydroShare?';
+                            const checkboxContainer = document.createElement('span');
+                            const label = document.createElement('label');
+                            label.htmlFor = 'delete-local-file';
+                            label.textContent = 'Delete local copy of the file';
+                            checkboxContainer.appendChild(checkbox);
+                            checkboxContainer.appendChild(label);
+                            div.appendChild(message);
+                            div.appendChild(checkboxContainer);
+                            return div;
+                        })()
+                    }),
                     buttons: [
                         Dialog.cancelButton({ label: 'Cancel' }),
                         Dialog.okButton({ label: 'OK' })
@@ -139,13 +158,15 @@ const extension: JupyterFrontEndPlugin<void> = {
                 });
 
                 if (result.button.label === 'OK') {
+                    const isDeleteLocalFile = checkbox.checked;
                     await handleCommand(
                         app,
                         tracker,
                         `Delete file from` + ` HydroShare`,
                         'delete',
                         `Delete file from` + ` HydroShare was successful`,
-                        response => `${response.success}`
+                        response => `${response.success}`,
+                        { delete_local_file: isDeleteLocalFile }
                     );
                 }
             }
