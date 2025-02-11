@@ -116,14 +116,35 @@ const extension: JupyterFrontEndPlugin<void> = {
 
         commands.addCommand('refresh-from-hydroshare', {
             label: 'Refresh File from HydroShare',
-            execute: () => handleCommand(
-                app,
-                tracker,
-                'Refresh file from HydroShare',
-                'refresh',
-                'File refresh from HydroShare was successful',
-                response => `${response.success}`
-            )
+            execute: async () => {
+                const result = await showDialog({
+                    title: 'Refresh File',
+                    body: new Widget({
+                        node: (() => {
+                            const div = document.createElement('div');
+                            const message = document.createElement('p');
+                            message.textContent = 'Refresh will overwrite the local file. Are you sure you want refresh this file from HydroShare?';
+                            div.appendChild(message);
+                            return div;
+                        })()
+                    }),
+                    buttons: [
+                        Dialog.cancelButton({ label: 'Cancel' }),
+                        Dialog.okButton({ label: 'OK' })
+                    ],
+                    defaultButton: 0
+                });
+                if (result.button.label === 'OK') {
+                    await handleCommand(
+                        app,
+                        tracker,
+                        'Refresh file from HydroShare',
+                        'refresh',
+                        'File refresh from HydroShare was successful',
+                        response => `${response.success}`
+                    );
+                }
+            }
         });
 
         commands.addCommand('delete-file-from-hydroshare', {
