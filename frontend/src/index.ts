@@ -109,7 +109,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                 tracker,
                 'Upload file to HydroShare',
                 'upload',
-                'Upload file to HydroShare was successful',
+                'File upload to HydroShare was successful',
                 response => `${response.success}`
             )
         });
@@ -123,7 +123,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                         node: (() => {
                             const div = document.createElement('div');
                             const message = document.createElement('p');
-                            message.textContent = 'Refresh will overwrite the local file. Are you sure you want refresh this file from HydroShare?';
+                            message.textContent = 'Refresh will overwrite the local copy of the file. Are you sure you want refresh this file from HydroShare?';
                             div.appendChild(message);
                             return div;
                         })()
@@ -163,7 +163,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                             const checkboxContainer = document.createElement('span');
                             const label = document.createElement('label');
                             label.htmlFor = 'delete-local-file';
-                            label.textContent = 'Delete local copy of the file';
+                            label.textContent = 'Delete also the local copy of the file';
                             checkboxContainer.appendChild(checkbox);
                             checkboxContainer.appendChild(label);
                             div.appendChild(message);
@@ -185,7 +185,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                         tracker,
                         `Delete file from` + ` HydroShare`,
                         'delete',
-                        `Delete file from` + ` HydroShare was successful`,
+                        `File delete from` + ` HydroShare was successful`,
                         response => `${response.success}`,
                         { delete_local_file: isDeleteLocalFile }
                     );
