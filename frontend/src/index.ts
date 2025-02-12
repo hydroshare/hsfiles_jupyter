@@ -194,7 +194,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         });
 
         commands.addCommand('check-file-status-with-hydroshare', {
-            label: 'Check File Status with Hydroshare',
+            label: 'Check File Status with HydroShare',
             execute: () => handleCommand(
                 app,
                 tracker,
