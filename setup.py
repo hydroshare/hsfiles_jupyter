@@ -14,7 +14,7 @@ setup(
     long_description_content_type='text/markdown',
     url='https://github.com/yourusername/hsfiles-jupyter',
     license='BSD-3-Clause',
-    packages=find_packages(),
+    packages=find_packages(include=['hsfiles_jupyter', 'hsfiles_jupyter.*']),
     classifiers=[
         'Development Status :: 4 - Beta',
         'Programming Language :: Python :: 3',
@@ -22,7 +22,7 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
     ],
-    python_requires='>=3.8',
+    python_requires='>=3.9',
     install_requires=[
         'hsclient>=1.1.0',
         'notebook==6.4.*',
