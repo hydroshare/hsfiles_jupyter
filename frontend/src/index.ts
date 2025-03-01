@@ -3,7 +3,7 @@ import {
     JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import {FileBrowser, IFileBrowserFactory} from '@jupyterlab/filebrowser';
-import {showDialog, Dialog, Spinner} from '@jupyterlab/apputils';
+import {showDialog, Dialog, Spinner, MainAreaWidget} from '@jupyterlab/apputils';
 import {ServerConnection} from '@jupyterlab/services';
 import {URLExt} from '@jupyterlab/coreutils';
 import {Widget} from '@lumino/widgets';
@@ -11,6 +11,7 @@ import {Widget} from '@lumino/widgets';
 class SpinnerWidget extends Widget {
     constructor() {
         super();
+        this.addClass('jp-SpinnerWidget');
         const spinner = new Spinner();
         this.node.appendChild(spinner.node);
     }
@@ -56,17 +57,20 @@ async function handleCommand(
             const fileBrowser = tracker.currentWidget;
             disableFileBrowser(fileBrowser);
 
-            const spinnerWidget = new SpinnerWidget();
-            spinnerWidget.id = 'spinner-widget';
-            app.shell.add(spinnerWidget, 'main');
-            spinnerWidget.node.style.display = 'block';
+            const content = new SpinnerWidget();
+            const mainWidget = new MainAreaWidget({ content });
+            mainWidget.id = `spinner-${command.replace(/\s+/g, '-')}`;
+            mainWidget.title.label = 'Processing...';
+            app.shell.add(mainWidget, 'main');
+            app.shell.currentChanged;  // Wait for layout update
+            content.node.style.display = 'block';
 
             try {
                 const response = await requestAPI<any>(url, {
                     method: 'POST',
                     body: JSON.stringify({path, ...extraData}),
                 });
-                spinnerWidget.node.style.display = 'none';
+                content.node.style.display = 'none';
                 const title = typeof successTitle === 'function' ? successTitle(response) : successTitle;
                 console.log(title, path);
                 await showDialog({
@@ -87,7 +91,10 @@ async function handleCommand(
                     console.error(errMssg, error);
                 }
             } finally {
-                spinnerWidget.dispose();
+                if (content.isAttached) {
+                    content.parent = null;
+                }
+                mainWidget.dispose();
                 enableFileBrowser(fileBrowser);
             }
         }
@@ -95,13 +102,13 @@ async function handleCommand(
 }
 
 const extension: JupyterFrontEndPlugin<void> = {
-    id: 'hsfiles-jupyter',
+    id: 'hsfiles_jupyter:plugin',
     autoStart: true,
     requires: [IFileBrowserFactory],
     activate: (app: JupyterFrontEnd, factory: IFileBrowserFactory) => {
         const {commands} = app;
         const {tracker} = factory;
-
+        console.log('JupyterLab extension hsfiles_jupyter is activated!');
         commands.addCommand('upload-to-hydroshare', {
             label: 'Upload File to HydroShare',
             execute: () => handleCommand(
@@ -119,15 +126,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             execute: async () => {
                 const result = await showDialog({
                     title: 'Refresh File',
-                    body: new Widget({
-                        node: (() => {
-                            const div = document.createElement('div');
-                            const message = document.createElement('p');
-                            message.textContent = 'Refresh will overwrite the local copy of the file. Are you sure you want refresh this file from HydroShare?';
-                            div.appendChild(message);
-                            return div;
-                        })()
-                    }),
+                    body: 'Refresh will overwrite the local copy of the file. Are you sure you want refresh this file from HydroShare?',
                     buttons: [
                         Dialog.cancelButton({ label: 'Cancel' }),
                         Dialog.okButton({ label: 'OK' })
@@ -150,27 +149,9 @@ const extension: JupyterFrontEndPlugin<void> = {
         commands.addCommand('delete-file-from-hydroshare', {
             label: `Delete File` + ` from HydroShare`,
             execute: async () => {
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.id = 'delete-local-file';
                 const result = await showDialog({
                     title: 'Delete File',
-                    body: new Widget({
-                        node: (() => {
-                            const div = document.createElement('div');
-                            const message = document.createElement('p');
-                            message.textContent = 'Are you sure you want to permanently delete this file from HydroShare?';
-                            const checkboxContainer = document.createElement('span');
-                            const label = document.createElement('label');
-                            label.htmlFor = 'delete-local-file';
-                            label.textContent = 'Delete also the local copy of the file';
-                            checkboxContainer.appendChild(checkbox);
-                            checkboxContainer.appendChild(label);
-                            div.appendChild(message);
-                            div.appendChild(checkboxContainer);
-                            return div;
-                        })()
-                    }),
+                    body: 'Are you sure you want to permanently delete this file from HydroShare?',
                     buttons: [
                         Dialog.cancelButton({ label: 'Cancel' }),
                         Dialog.okButton({ label: 'OK' })
@@ -179,7 +160,18 @@ const extension: JupyterFrontEndPlugin<void> = {
                 });
 
                 if (result.button.label === 'OK') {
-                    const isDeleteLocalFile = checkbox.checked;
+                    // Show a second dialog for the local file deletion option
+                    const localResult = await showDialog({
+                        title: 'Delete Local File Copy',
+                        body: 'Do you want to delete the local copy of the file as well?',
+                        buttons: [
+                            Dialog.cancelButton({ label: 'No' }),
+                            Dialog.okButton({ label: 'Yes' })
+                        ],
+                        defaultButton: 0
+                    });
+
+                    const isDeleteLocalFile = localResult.button.label === 'Yes';
                     await handleCommand(
                         app,
                         tracker,
