@@ -1,18 +1,21 @@
-
 import os
+
 from setuptools import setup, find_packages
 
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+# This is used only in local development
 LABEXTENSION_PATH = os.path.join('frontend', 'lib')
 
 setup(
-    name='hsfiles-jupyter',
-    version='0.1.0',
+    name='hsfiles_jupyter',
+    version='0.1.0b17',
     author='Pabitra Dash',
     author_email='pabitra.dash@usu.edu',
     description='A JupyterLab extension to manage HydroShare resource files in JupyterLab',
-    long_description=open('README.md').read(),
+    long_description=open(os.path.join(HERE, 'README.md')).read(),
     long_description_content_type='text/markdown',
-    url='https://github.com/yourusername/hsfiles-jupyter',
+    url='https://github.com/hydroshare/hsfiles_jupyter',
     license='BSD-3-Clause',
     packages=find_packages(include=['hsfiles_jupyter', 'hsfiles_jupyter.*']),
     classifiers=[
@@ -24,20 +27,30 @@ setup(
     ],
     python_requires='>=3.9',
     install_requires=[
-        'hsclient>=1.1.0',
+        'hsclient>=1.1.6',
         'notebook==6.4.*',
-        'jupyterlab==4.1.*',
+        'jupyterlab==4.3.*',
         'jupyter_server==2.13.*',
     ],
     include_package_data=True,
     package_data={
-        '': ['lib/*'],
+        'hsfiles_jupyter': [
+            '_version.py'
+        ]
     },
     data_files=[
-        ('share/jupyter/labextensions/hsfiles-jupyter', [
-            os.path.join(LABEXTENSION_PATH, 'index.js')
+        ('share/jupyter/labextensions/hsfiles_jupyter', [
+            os.path.join('frontend', 'lib', 'index.js'),
+            os.path.join('frontend', 'lib', 'package.json'),
         ]),
     ],
     zip_safe=False,
+    entry_points={
+        "jupyterlab.extension": [
+            "hsfiles_jupyter = hsfiles_jupyter:extension"
+        ],
+        "jupyter_server_extension": [
+        "hsfiles_jupyter = hsfiles_jupyter:_load_jupyter_server_extension"
+        ]
+    },
 )
-

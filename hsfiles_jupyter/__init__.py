@@ -16,7 +16,7 @@ _EXTENSION_NAME = "hsfiles_jupyter"
 
 def _jupyter_labextension_paths():
     return [{
-        "src": "frontend",
+        "src": "labextension",
         "dest": _EXTENSION_NAME
     }]
 

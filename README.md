@@ -4,7 +4,7 @@ A JupyterLab extension for managing HydroShare resource files in JupyterLab. Thi
 ### Installation
 
 ```python
-# Create and activate python environment, requires python >= 3.8
+# Create and activate python environment, requires python >= 3.9
 
 python3 -m venv .venv
 source .venv/bin/activate
@@ -14,7 +14,7 @@ python3 -m pip install --upgrade pip
 python3 -m pip install hsfiles_jupyter
 
 # enable server extension 
-jupyter server extension enable hsfiles_jupyter
+jupyter server extension enable hsfiles_jupyter --sys-prefix
 
 # Launch JupyterLab and access the functionality of this extension from the JupyterLab file browser menu!
 python3 -m jupyter lab
