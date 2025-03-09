@@ -39,3 +39,5 @@ def _load_jupyter_server_extension(server_app: ServerApp):
 
     setup_handlers(server_app.web_app)
     server_app.log.info(f"Registered {_EXTENSION_NAME} server extension")
+
+load_jupyter_server_extension = _load_jupyter_server_extension

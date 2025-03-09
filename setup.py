@@ -4,11 +4,13 @@ from setuptools import setup, find_packages
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-# This is used only in local development
-LABEXTENSION_PATH = os.path.join('frontend', 'lib')
+PKG_NAME = 'hsfiles_jupyter'
+
+# path to pre-built lab-extension - used during development only
+LABEXTENSION_PATH = os.path.join( HERE, PKG_NAME, 'labextension' )
 
 setup(
-    name='hsfiles_jupyter',
+    name=PKG_NAME,
     version='0.1.0b17',
     author='Pabitra Dash',
     author_email='pabitra.dash@usu.edu',
@@ -35,22 +37,10 @@ setup(
     include_package_data=True,
     package_data={
         'hsfiles_jupyter': [
-            '_version.py'
+            '_version.py',
+            'labextension/*',
+            'labextension/static/*'
         ]
     },
-    data_files=[
-        ('share/jupyter/labextensions/hsfiles_jupyter', [
-            os.path.join('frontend', 'lib', 'index.js'),
-            os.path.join('frontend', 'lib', 'package.json'),
-        ]),
-    ],
-    zip_safe=False,
-    entry_points={
-        "jupyterlab.extension": [
-            "hsfiles_jupyter = hsfiles_jupyter:extension"
-        ],
-        "jupyter_server_extension": [
-        "hsfiles_jupyter = hsfiles_jupyter:_load_jupyter_server_extension"
-        ]
-    },
+    zip_safe=False
 )

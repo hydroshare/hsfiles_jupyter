@@ -2,13 +2,14 @@
   "name": "hsfiles_jupyter",
   "version": "0.1.0b17",
   "description": "A JupyterLab extension to manage HydroShare resource files in JupyterLab",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
   "scripts": {
-    "build": "webpack --mode production",
-    "watch": "webpack --mode development --watch",
-    "clean": "rimraf lib/ tsconfig.tsbuildinfo",
-    "clean:all": "rimraf lib/ node_modules/ tsconfig.tsbuildinfo package-lock.json",
+    "build:tsc": "tsc",
+    "build": "npm run build:tsc && jupyter labextension build .",
+    "watch": "jupyter labextension watch .",
+    "clean": "rimraf build/ tsconfig.tsbuildinfo",
+    "clean:all": "rimraf build/ node_modules/ tsconfig.tsbuildinfo package-lock.json",
     "rebuild": "npm run clean && npm install && npm run build"
   },
   "dependencies": {
@@ -20,20 +21,14 @@
   },
   "jupyterlab": {
     "extension": true,
-    "outputDir": "../frontend/lib",
+    "outputDir": "../hsfiles_jupyter/labextension",
     "webpackConfig": "./webpack.config.js",
     "discovery": {
-      "server": {
-        "managers": [
-          "pip"
-        ],
-        "base": {
-          "name": "hsfiles_jupyter"
-        }
-      }
-    } 
+      "prebuilt": true
+    }
   },
   "devDependencies": {
+    "@jupyterlab/builder": "^4.1.5",
     "@types/json-schema": "^7.0.15",
     "copy-webpack-plugin": "^11.0.0",
     "svg-url-loader": "^8.0.0",
@@ -43,6 +38,6 @@
     "typescript": "^4.9.5"
   },
   "files": [
-    "lib/**/*"
+    "build/**/*"
   ]
 }

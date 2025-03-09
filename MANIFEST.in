@@ -1,6 +1,6 @@
 include README.md
 include LICENSE
-include frontend/lib/*
+recursive-include hsfiles_jupyter/labextension *
 include hsfiles_jupyter/_version.py
 
 recursive-exclude * node_modules

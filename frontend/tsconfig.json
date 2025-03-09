@@ -4,8 +4,8 @@
     "module": "amd",
     "moduleResolution": "node",
     "lib": ["ES6", "DOM", "ESNext"],
-    "outDir": "./lib",
-    "rootDir": "./src",
+    "outDir": "build",
+    "rootDir": "src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true
