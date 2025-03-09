@@ -1,5 +1,4 @@
 node_modules/
-lib/
 __pycache__/
 *.pyc
 *.egg-info
@@ -8,3 +7,6 @@ __pycache__/
 .venv/
 build/
 dist/
+
+# typescript/javascript package manager files
+yarn.lock
