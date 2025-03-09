@@ -34,6 +34,14 @@ setup(
         'jupyterlab==4.3.*',
         'jupyter_server==2.13.*',
     ],
+    extras_require={
+        'dev': [
+            'build',
+            'setuptools',
+            'wheel',
+            'twine'
+        ]
+    },
     include_package_data=True,
     package_data={
         'hsfiles_jupyter': [
