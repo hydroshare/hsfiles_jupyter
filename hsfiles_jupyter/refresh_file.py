@@ -9,7 +9,7 @@ from .utils import (
 
 
 async def refresh_file_from_hydroshare(file_path: str):
-    """Download the file 'file_path' from HydroShare and overwrite the local file"""
+    """Download the file 'file_path' from HydroShare and replace the local file"""
 
     rfc_manager = ResourceFileCacheManager()
     try:
@@ -31,12 +31,12 @@ async def refresh_file_from_hydroshare(file_path: str):
 
     try:
         res_info.resource.file_download(path=res_info.hs_file_relative_path, save_path=downloaded_file_path)
-        success_msg = (f'File {res_info.hs_file_path} refreshed successfully from'
+        success_msg = (f'File {res_info.hs_file_path} replaced successfully from'
                        f' HydroShare resource: {res_info.resource_id}')
         return {"success": success_msg}
     except Exception as e:
         hs_error = str(e)
-        err_msg = (f'Failed to refresh file: {res_info.hs_file_path} from HydroShare'
+        err_msg = (f'Failed to replace file: {res_info.hs_file_path} from HydroShare'
                    f' resource: {res_info.resource_id}. Error: {hs_error}')
         logger.error(err_msg)
         return {"error": err_msg}

@@ -5,7 +5,7 @@ from .utils import (
 
 
 async def check_file_status(file_path: str):
-    """Checks if the selected file is also in Hydroshare"""
+    """Checks if the selected local file is also in Hydroshare and if they are identical"""
 
     rfc_manager = ResourceFileCacheManager()
     try:

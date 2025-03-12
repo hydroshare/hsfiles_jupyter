@@ -122,11 +122,11 @@ const extension: JupyterFrontEndPlugin<void> = {
         });
 
         commands.addCommand('refresh-from-hydroshare', {
-            label: 'Refresh File from HydroShare',
+            label: 'Replace with File from HydroShare',
             execute: async () => {
                 const result = await showDialog({
-                    title: 'Refresh File',
-                    body: 'Refresh will overwrite the local copy of the file. Are you sure you want refresh this file from HydroShare?',
+                    title: 'Replace File',
+                    body: 'Replace will overwrite the local copy of the file. Are you sure you want replace this file from HydroShare?',
                     buttons: [
                         Dialog.cancelButton({ label: 'Cancel' }),
                         Dialog.okButton({ label: 'OK' })
@@ -137,9 +137,9 @@ const extension: JupyterFrontEndPlugin<void> = {
                     await handleCommand(
                         app,
                         tracker,
-                        'Refresh file from HydroShare',
+                        'Replace with file from HydroShare',
                         'refresh',
-                        'File refresh from HydroShare was successful',
+                        'File replace from HydroShare was successful',
                         response => `${response.success}`
                     );
                 }
@@ -147,11 +147,11 @@ const extension: JupyterFrontEndPlugin<void> = {
         });
 
         commands.addCommand('delete-file-from-hydroshare', {
-            label: `Delete File` + ` from HydroShare`,
+            label: `Delete File` + ` in HydroShare`,
             execute: async () => {
                 const result = await showDialog({
                     title: 'Delete File',
-                    body: 'Are you sure you want to permanently delete this file from HydroShare?',
+                    body: 'Are you sure you want to permanently delete this file in HydroShare?',
                     buttons: [
                         Dialog.cancelButton({ label: 'Cancel' }),
                         Dialog.okButton({ label: 'OK' })
@@ -175,9 +175,9 @@ const extension: JupyterFrontEndPlugin<void> = {
                     await handleCommand(
                         app,
                         tracker,
-                        `Delete file from` + ` HydroShare`,
+                        `Delete file in` + ` HydroShare`,
                         'delete',
-                        `File delete from` + ` HydroShare was successful`,
+                        `File delete in` + ` HydroShare was successful`,
                         response => `${response.success}`,
                         { delete_local_file: isDeleteLocalFile }
                     );
@@ -186,11 +186,11 @@ const extension: JupyterFrontEndPlugin<void> = {
         });
 
         commands.addCommand('check-file-status-with-hydroshare', {
-            label: 'Check File Status with HydroShare',
+            label: 'Check Status of File in HydroShare',
             execute: () => handleCommand(
                 app,
                 tracker,
-                'Check file status with HydroShare',
+                'Check status of file in HydroShare',
                 'status',
                 response => `File Status: ${response.status}`,
                 response => `${response.success}`
