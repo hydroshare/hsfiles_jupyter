@@ -82,17 +82,23 @@ class HydroShareWrapper:
             except ConnectionError:
                 if attempt == max_retries - 1:
                     raise
-                time.sleep(1)  # Wait before retry
+                time.sleep(1)
                 self.hs = self._create_session()  # Create new session
 
     def get_resource(self, resource_id):
-        # before we do any operation using the resource object (api call) we need to make sure the session
-        # for the resource is still active/valid
-        # this function 'get_resource()' should be called before any api call we make using the resource object
+        # this function is used to get the resource object from HydroShare using an active hydroshare client session
+        # always use this function when there is a need to retrieve a resource object from hydroshare
         return self.execute_with_retry(
             lambda: self.hs.resource(resource_id)
         )
-
+    def update_resource_session(self, resource):
+        # before we do any operation (api call) using the resource object, we need to make sure the hydroshare client
+        # session for the resource is still active/valid - here we are using the my_user_info api call to check
+        # if the session is still valid, otherwise we create a new session
+        self.execute_with_retry(
+            lambda: self.hs.my_user_info()
+        )
+        resource._hs_session = self.hs._hs_session
 
 @dataclass
 class ResourceFilesCache:
@@ -108,9 +114,9 @@ class ResourceFilesCache:
             self._file_paths.remove(file_path)
 
     def load_files_to_cache(self) -> None:
-        # refresh resource only if 30 seconds have passed since last refresh
+        # refresh resource hydroshare session only if 30 seconds have passed since last refresh
         if (datetime.now() - self._refreshed_at).total_seconds() > 30:
-            self._resource = HydroShareWrapper().get_resource(self._resource.resource_id)
+            HydroShareWrapper().update_resource_session(self._resource)
         self._resource.refresh()
         self._file_paths = self._resource.files(search_aggregations=True)
         self._refreshed_at = datetime.now()
