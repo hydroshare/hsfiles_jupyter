@@ -1,6 +1,6 @@
 {
   "name": "hsfiles_jupyter",
-  "version": "0.1.0b17",
+  "version": "0.1.0b18",
   "description": "A JupyterLab extension to manage HydroShare resource files in JupyterLab",
   "main": "build/index.js",
   "types": "build/index.d.ts",
