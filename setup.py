@@ -30,7 +30,7 @@ setup(
     python_requires='>=3.9',
     install_requires=[
         'hsclient>=1.1.6',
-        'notebook==6.4.*',
+        'notebook==6.5.*',
         'jupyterlab==4.3.*',
         'jupyter_server==2.13.*',
     ],
