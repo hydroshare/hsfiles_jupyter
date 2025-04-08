@@ -26,6 +26,10 @@ jobs:
       with:
         node-version: '14'
 
+    - name: Install JupyterLab
+      run: |
+        pip install jupyterlab
+
     - name: Build frontend
       run: |
         cd frontend
@@ -48,7 +52,7 @@ jobs:
 
     - name: Install test dependencies
       run: |
-        pip install asynctest tornado pytest
+        pip install asynctest tornado pytest jupyter
 
     - name: Run tests
       run: |
