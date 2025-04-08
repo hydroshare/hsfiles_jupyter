@@ -48,7 +48,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install dist/*.tar.gz
+        pip install -v dist/*.whl || pip install -v dist/*.tar.gz
 
     - name: Install test dependencies
       run: |
