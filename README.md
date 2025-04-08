@@ -39,7 +39,7 @@ python3 -m jupyter lab
 #### Backend
 
 1. Navigate to the `hsfiles_jupyter` directory (project root).
-2. Run `jpython3 -m hsfiles_jupyter` to link extension to JupyterLab.
+2. Run `python3 -m hsfiles_jupyter` to link extension to JupyterLab.
 
 ### Usage
 
