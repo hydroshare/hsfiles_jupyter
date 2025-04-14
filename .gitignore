@@ -7,6 +7,6 @@ __pycache__/
 .venv/
 build/
 dist/
-
+.pypirc
 # typescript/javascript package manager files
 yarn.lock
