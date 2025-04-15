@@ -280,25 +280,43 @@ const extension: JupyterFrontEndPlugin<void> = {
             )
         });
 
+        // Add separator before HydroShare items with a higher rank
+        app.contextMenu.addItem({
+            type: 'separator',
+            selector: '.jp-DirListing-item[data-isdir="false"]',
+            rank: 10.0
+        });
+
+        // Add HydroShare menu items with consecutive ranks
         app.contextMenu.addItem({
             command: 'upload-to-hydroshare',
             selector: '.jp-DirListing-item[data-isdir="false"]',
-            rank: 1.6
+            rank: 10.1
         });
+
         app.contextMenu.addItem({
             command: 'refresh-from-hydroshare',
             selector: '.jp-DirListing-item[data-isdir="false"]',
-            rank: 1.7
+            rank: 10.2
         });
+
         app.contextMenu.addItem({
             command: 'delete-file-from-hydroshare',
             selector: '.jp-DirListing-item[data-isdir="false"]',
-            rank: 1.8
+            rank: 10.3
         });
+
         app.contextMenu.addItem({
             command: 'check-file-status-with-hydroshare',
             selector: '.jp-DirListing-item[data-isdir="false"]',
-            rank: 1.9
+            rank: 10.4
+        });
+
+        // Add separator after HydroShare items
+        app.contextMenu.addItem({
+            type: 'separator',
+            selector: '.jp-DirListing-item[data-isdir="false"]',
+            rank: 10.5
         });
     }
 };
