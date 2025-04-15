@@ -101,6 +101,88 @@ async function handleCommand(
     }
 }
 
+async function handleUploadCommand(
+    app: JupyterFrontEnd,
+    tracker: IFileBrowserFactory['tracker'],
+    path: string,
+    fileBrowser: FileBrowser,
+    content: SpinnerWidget,
+    mainWidget: MainAreaWidget<SpinnerWidget>
+) {
+    try {
+        // First check if file exists
+        const statusResponse = await requestAPI<any>('status', {
+            method: 'POST',
+            body: JSON.stringify({path}),
+        });
+
+        if (statusResponse.status === "Exists in HydroShare" || 
+            statusResponse.status === "Exists in HydroShare but they are different" ||
+            statusResponse.status === "Exists in HydroShare and they are identical") {
+            
+            const result = await showDialog({
+                title: 'File Already Exists',
+                body: 'This file already exists in HydroShare. Would you like to replace it?',
+                buttons: [
+                    Dialog.cancelButton({ label: 'Cancel' }),
+                    Dialog.okButton({ label: 'Replace' })
+                ],
+                defaultButton: 0
+            });
+
+            if (result.button.label === 'Replace') {
+                // Delete the existing file first
+                await requestAPI<any>('delete', {
+                    method: 'POST',
+                    body: JSON.stringify({path}),
+                });
+                
+                // Now upload the new file
+                const uploadResponse = await requestAPI<any>('upload', {
+                    method: 'POST',
+                    body: JSON.stringify({path}),
+                });
+                
+                await showDialog({
+                    title: 'File upload to HydroShare was successful',
+                    body: uploadResponse.success,
+                    buttons: [Dialog.okButton({label: 'OK'})]
+                });
+            }
+        } else {
+            // File doesn't exist, proceed with normal upload
+            const uploadResponse = await requestAPI<any>('upload', {
+                method: 'POST',
+                body: JSON.stringify({path}),
+            });
+            
+            await showDialog({
+                title: 'File upload to HydroShare was successful',
+                body: uploadResponse.success,
+                buttons: [Dialog.okButton({label: 'OK'})]
+            });
+        }
+    } catch (error) {
+        const errMssg = `Upload file to HydroShare Failed:`;
+        if (error instanceof Error) {
+            console.error(errMssg, error.message);
+            await showDialog({
+                title: `Upload Failed`,
+                body: `Error: ${error.message}.`,
+                buttons: [Dialog.okButton({label: 'OK'})]
+            });
+        } else {
+            console.error(errMssg, error);
+        }
+    } finally {
+        if (content.isAttached) {
+            content.parent = null;
+        }
+        mainWidget.dispose();
+        enableFileBrowser(fileBrowser);
+    }
+}
+
 const extension: JupyterFrontEndPlugin<void> = {
     id: 'hsfiles_jupyter:plugin',
     autoStart: true,
@@ -109,16 +191,30 @@ const extension: JupyterFrontEndPlugin<void> = {
         const {commands} = app;
         const {tracker} = factory;
         console.log('JupyterLab extension hsfiles_jupyter is activated!');
+        
         commands.addCommand('upload-to-hydroshare', {
             label: 'Upload File to HydroShare',
-            execute: () => handleCommand(
-                app,
-                tracker,
-                'Upload file to HydroShare',
-                'upload',
-                'File upload to HydroShare was successful',
-                response => `${response.success}`
-            )
+            execute: async () => {
+                const widget = tracker.currentWidget;
+                if (widget) {
+                    const selectedItem = widget.selectedItems().next();
+                    if (selectedItem && selectedItem.value) {
+                        const path = selectedItem.value.path;
+                        const fileBrowser = tracker.currentWidget;
+                        disableFileBrowser(fileBrowser);
+
+                        const content = new SpinnerWidget();
+                        const mainWidget = new MainAreaWidget({ content });
+                        mainWidget.id = 'spinner-upload-to-hydroshare';
+                        mainWidget.title.label = 'Processing...';
+                        app.shell.add(mainWidget, 'main');
+                        app.shell.currentChanged;  // Wait for layout update
+                        content.node.style.display = 'block';
+
+                        await handleUploadCommand(app, tracker, path, fileBrowser, content, mainWidget);
+                    }
+                }
+            }
         });
 
         commands.addCommand('refresh-from-hydroshare', {
