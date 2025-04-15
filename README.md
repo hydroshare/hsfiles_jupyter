@@ -21,7 +21,7 @@ python3 -m jupyter lab
 ```
 ### Setup for Development
 
-1. Clone the repository: `git clone https://github.com/hydroshare/hsfiles_jupyter.git`
+1. Clone the repository: `git clone https://github.com/UCHIC/hsfiles_jupyter.git`
 2. Navigate to the project root directory: `cd hsfiles_jupyter`
 3. Create a branch: `git checkout -b my-branch`
 4. Create a virtual environment: `python3 -m venv .venv`
