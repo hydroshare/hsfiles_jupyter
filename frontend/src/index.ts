@@ -7,6 +7,7 @@ import {showDialog, Dialog, Spinner, MainAreaWidget} from '@jupyterlab/apputils'
 import {ServerConnection} from '@jupyterlab/services';
 import {URLExt} from '@jupyterlab/coreutils';
 import {Widget} from '@lumino/widgets';
+import { addIcon, downloadIcon, closeIcon, infoIcon } from '@jupyterlab/ui-components';
 
 class SpinnerWidget extends Widget {
     constructor() {
@@ -194,6 +195,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         
         commands.addCommand('upload-to-hydroshare', {
             label: 'Upload File to HydroShare',
+            icon: addIcon,
             execute: async () => {
                 const widget = tracker.currentWidget;
                 if (widget) {
@@ -219,6 +221,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
         commands.addCommand('refresh-from-hydroshare', {
             label: 'Replace with File from HydroShare',
+            icon: downloadIcon,
             execute: async () => {
                 const result = await showDialog({
                     title: 'Replace File',
@@ -244,6 +247,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
         commands.addCommand('delete-file-from-hydroshare', {
             label: `Delete File` + ` in HydroShare`,
+            icon: closeIcon,
             execute: async () => {
                 const result = await showDialog({
                     title: 'Delete File',
@@ -270,6 +274,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
         commands.addCommand('check-file-status-with-hydroshare', {
             label: 'Check Status of File in HydroShare',
+            icon: infoIcon,
             execute: () => handleCommand(
                 app,
                 tracker,
