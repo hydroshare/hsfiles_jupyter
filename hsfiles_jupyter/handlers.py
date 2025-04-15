@@ -13,11 +13,7 @@ class BaseFileHandler(APIHandler):
         try:
             data = self.get_json_body()
             file_path = data['path']
-            delete_local_file = data.get('delete_local_file', None)
-            if delete_local_file is not None:
-                response = await operation(file_path, delete_local_file)
-            else:
-                response = await operation(file_path)
+            response = await operation(file_path)
             await self.finish(json.dumps({"response": response}))
         except Exception as e:
             self.set_status(500)

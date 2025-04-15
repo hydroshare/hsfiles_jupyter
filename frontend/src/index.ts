@@ -160,26 +160,13 @@ const extension: JupyterFrontEndPlugin<void> = {
                 });
 
                 if (result.button.label === 'OK') {
-                    // Show a second dialog for the local file deletion option
-                    const localResult = await showDialog({
-                        title: 'Delete Local File Copy',
-                        body: 'Do you want to delete the local copy of the file as well?',
-                        buttons: [
-                            Dialog.cancelButton({ label: 'No' }),
-                            Dialog.okButton({ label: 'Yes' })
-                        ],
-                        defaultButton: 0
-                    });
-
-                    const isDeleteLocalFile = localResult.button.label === 'Yes';
                     await handleCommand(
                         app,
                         tracker,
                         `Delete file in` + ` HydroShare`,
                         'delete',
                         `File delete in` + ` HydroShare was successful`,
-                        response => `${response.success}`,
-                        { delete_local_file: isDeleteLocalFile }
+                        response => `${response.success}`
                     );
                 }
             }

@@ -1,20 +1,15 @@
-import os
-
 from .utils import (
     FileCacheUpdateType,
     ResourceFileCacheManager,
     logger,
     HydroShareAuthError,
-    get_local_absolute_file_path,
 )
 
 
-async def delete_file_from_hydroshare(file_path: str, delete_local_file: bool = False):
+async def delete_file_from_hydroshare(file_path: str):
     """
-    Deletes a file 'file_path' from HydroShare resource as well as from the
-    local filesystem if delete_local_file is set to True.
+    Deletes a file 'file_path' from HydroShare resource.
     """
-
     rfc_manager = ResourceFileCacheManager()
     try:
         res_info = rfc_manager.get_hydroshare_resource_info(file_path)
@@ -53,17 +48,4 @@ async def delete_file_from_hydroshare(file_path: str, delete_local_file: bool = 
         return {"error": err_msg}
 
     delete_success_msg = f'File {res_info.hs_file_path} was deleted from HydroShare resource: {res_info.resource_id}'
-    if delete_local_file:
-        local_file_to_delete_full_path = get_local_absolute_file_path(file_path)
-        try:
-            # deleting from local filesystem
-            os.remove(local_file_to_delete_full_path)
-            return {"success": delete_success_msg}
-        except Exception as e:
-            os_error = str(e)
-            err_msg = (f'File {res_info.hs_file_path} was deleted from HydroShare resource: {res_info.resource_id}\n.'
-                       f' NOTE: However, the local file could not be deleted. Error: {os_error}')
-            logger.error(err_msg)
-            return {"success": err_msg}
-    else:
-        return {"success": delete_success_msg}
+    return {"success": delete_success_msg}
