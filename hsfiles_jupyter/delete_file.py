@@ -1,8 +1,8 @@
 from .utils import (
     FileCacheUpdateType,
+    HydroShareAuthError,
     ResourceFileCacheManager,
     logger,
-    HydroShareAuthError,
 )
 
 

@@ -1,6 +1,6 @@
 from .utils import (
-    ResourceFileCacheManager,
     HydroShareAuthError,
+    ResourceFileCacheManager,
 )
 
 

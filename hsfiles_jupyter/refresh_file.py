@@ -1,10 +1,10 @@
 import os
 
 from .utils import (
-    ResourceFileCacheManager,
-    logger,
     HydroShareAuthError,
+    ResourceFileCacheManager,
     get_local_absolute_file_path,
+    logger,
 )
 
 

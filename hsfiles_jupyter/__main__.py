@@ -1,9 +1,8 @@
+import os
 from pathlib import Path
+
 from jupyter_core.paths import ENV_JUPYTER_PATH
 from jupyter_server.extension.serverextension import EnableServerExtensionApp
-import os
-
-
 
 _ERROR_MESSAGE_PREFIX = "Fatal, cannot link labextension."
 

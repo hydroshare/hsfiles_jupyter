@@ -1,15 +1,20 @@
 import json
 
-from asynctest import CoroutineMock, patch, PropertyMock
-
-from tornado.web import Application, RequestHandler
+from asynctest import CoroutineMock, PropertyMock, patch
 from tornado.testing import AsyncHTTPTestCase, gen_test
+from tornado.web import Application, RequestHandler
 
 from hsfiles_jupyter.handlers import (
-    UploadFileHandler as OriginalUploadFileHandler,
-    RefreshFileHandler as OriginalRefreshFileHandler,
-    DeleteFileHandler as OriginalDeleteFileHandler,
     CheckFileStatusHandler as OriginalCheckFileStatusHandler,
+)
+from hsfiles_jupyter.handlers import (
+    DeleteFileHandler as OriginalDeleteFileHandler,
+)
+from hsfiles_jupyter.handlers import (
+    RefreshFileHandler as OriginalRefreshFileHandler,
+)
+from hsfiles_jupyter.handlers import (
+    UploadFileHandler as OriginalUploadFileHandler,
 )
 
 
