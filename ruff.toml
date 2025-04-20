@@ -8,7 +8,6 @@ line-length = 120
 select = ["E", "F", "W", "I"]
 
 # Optionally, ignore specific rules
-ignore = ["E501"]  # E501 is "line too long" — if you prefer disabling Ruff's own check for it
 
 # Optionally, extend excludes for folders you don't want to lint
 exclude = [
@@ -16,6 +15,9 @@ exclude = [
   "__pycache__",
   "build",
   "dist",
+  ".gitignore",
+  "MANIFEST.in",
+  "README.md",
   "tests/test_handlers_backup.py"
 ]
 

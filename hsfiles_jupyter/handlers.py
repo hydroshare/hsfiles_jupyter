@@ -14,12 +14,13 @@ class BaseFileHandler(APIHandler):
     async def handle_request(self, operation):
         try:
             data = self.get_json_body()
-            file_path = data['path']
+            file_path = data["path"]
             response = await operation(file_path)
             await self.finish(json.dumps({"response": response}))
         except Exception as e:
             self.set_status(500)
             await self.finish(json.dumps({"response": {"error": str(e)}}))
+
 
 class UploadFileHandler(BaseFileHandler):
     @web.authenticated
@@ -46,16 +47,18 @@ class CheckFileStatusHandler(BaseFileHandler):
 
 
 def setup_handlers(web_app):
-    host_pattern = '.*$'
-    base_url = web_app.settings['base_url']
-    upload_route_pattern = url_path_join(base_url, 'hydroshare', 'upload')
-    refresh_route_pattern = url_path_join(base_url, 'hydroshare', 'refresh')
-    delete_route_pattern = url_path_join(base_url, 'hydroshare', 'delete')
-    check_file_status_route_pattern = url_path_join(base_url, 'hydroshare', 'status')
-    web_app.add_handlers(host_pattern,
-                         [(upload_route_pattern, UploadFileHandler),
-                          (refresh_route_pattern, RefreshFileHandler),
-                          (delete_route_pattern, DeleteFileHandler),
-                          (check_file_status_route_pattern, CheckFileStatusHandler)
-                          ]
-                         )
+    host_pattern = ".*$"
+    base_url = web_app.settings["base_url"]
+    upload_route_pattern = url_path_join(base_url, "hydroshare", "upload")
+    refresh_route_pattern = url_path_join(base_url, "hydroshare", "refresh")
+    delete_route_pattern = url_path_join(base_url, "hydroshare", "delete")
+    check_file_status_route_pattern = url_path_join(base_url, "hydroshare", "status")
+    web_app.add_handlers(
+        host_pattern,
+        [
+            (upload_route_pattern, UploadFileHandler),
+            (refresh_route_pattern, RefreshFileHandler),
+            (delete_route_pattern, DeleteFileHandler),
+            (check_file_status_route_pattern, CheckFileStatusHandler),
+        ],
+    )
