@@ -34,7 +34,18 @@ setup(
         "jupyterlab==4.3.*",
         "jupyter_server==2.13.*",
     ],
-    extras_require={"dev": ["build", "setuptools", "wheel", "twine"]},
+    extras_require={
+        "dev": [
+            "build",
+            "setuptools",
+            "wheel",
+            "twine",
+            "pytest",
+            "pytest-asyncio",
+            "asynctest",
+            "tornado"
+        ]
+    },
     include_package_data=True,
     package_data={"hsfiles_jupyter": ["_version.py", "labextension/*", "labextension/static/*"]},
     zip_safe=False,
