@@ -7,7 +7,7 @@ import {showDialog, Dialog, Spinner, MainAreaWidget} from '@jupyterlab/apputils'
 import {ServerConnection} from '@jupyterlab/services';
 import {URLExt} from '@jupyterlab/coreutils';
 import {Widget} from '@lumino/widgets';
-import { addIcon, downloadIcon, closeIcon, infoIcon } from '@jupyterlab/ui-components';
+import { addIcon, downloadIcon, closeIcon, infoIcon, refreshIcon } from '@jupyterlab/ui-components';
 
 class SpinnerWidget extends Widget {
     constructor() {
@@ -117,10 +117,10 @@ async function handleUploadCommand(
             body: JSON.stringify({path}),
         });
 
-        if (statusResponse.status === "Exists in HydroShare" || 
+        if (statusResponse.status === "Exists in HydroShare" ||
             statusResponse.status === "Exists in HydroShare but they are different" ||
             statusResponse.status === "Exists in HydroShare and they are identical") {
-            
+
             const result = await showDialog({
                 title: 'File Already Exists',
                 body: 'This file already exists in HydroShare. Would you like to replace it?',
@@ -137,13 +137,13 @@ async function handleUploadCommand(
                     method: 'POST',
                     body: JSON.stringify({path}),
                 });
-                
+
                 // Now upload the new file
                 const uploadResponse = await requestAPI<any>('upload', {
                     method: 'POST',
                     body: JSON.stringify({path}),
                 });
-                
+
                 await showDialog({
                     title: 'File upload to HydroShare was successful',
                     body: uploadResponse.success,
@@ -156,7 +156,7 @@ async function handleUploadCommand(
                 method: 'POST',
                 body: JSON.stringify({path}),
             });
-            
+
             await showDialog({
                 title: 'File upload to HydroShare was successful',
                 body: uploadResponse.success,
@@ -184,6 +184,135 @@ async function handleUploadCommand(
     }
 }
 
+// Function to handle downloading files from HydroShare
+async function handleDownloadCommand(
+    app: JupyterFrontEnd,
+    tracker: IFileBrowserFactory['tracker']
+) {
+    const widget = tracker.currentWidget;
+    if (!widget) return;
+
+    const currentPath = widget.model.path;
+    const pathParts = currentPath.split('/');
+
+    // Extract resource ID from path
+    const resourceId = pathParts[1];
+
+    const fileBrowser = tracker.currentWidget;
+    disableFileBrowser(fileBrowser);
+
+    const content = new SpinnerWidget();
+    const mainWidget = new MainAreaWidget({ content });
+    mainWidget.id = 'spinner-download-from-hydroshare';
+    mainWidget.title.label = 'Processing...';
+    app.shell.add(mainWidget, 'main');
+    app.shell.currentChanged;  // Wait for layout update
+    content.node.style.display = 'block';
+
+    try {
+        // Get list of available files
+        const filesResponse = await requestAPI<any>('list_files', {
+            method: 'POST',
+            body: JSON.stringify({resource_id: resourceId}),
+        });
+
+        if (!filesResponse.available_files || filesResponse.available_files.length === 0) {
+            await showDialog({
+                title: 'No Files Available',
+                body: 'All files from this resource have already been downloaded.',
+                buttons: [Dialog.okButton({label: 'OK'})]
+            });
+            return;
+        }
+
+        // Create dropdown options
+        const options = filesResponse.available_files.map((file: string) => {
+            return { label: file, value: file };
+        });
+
+        // Create a select element
+        const selectNode = document.createElement('select');
+        selectNode.className = 'jp-mod-styled';
+        selectNode.style.width = '100%';
+        selectNode.style.marginBottom = '15px';
+
+        options.forEach((option: { value: string, label: string }) => {
+            const optionNode = document.createElement('option');
+            optionNode.value = option.value;
+            optionNode.textContent = option.label;
+            selectNode.appendChild(optionNode);
+        });
+
+        // Create a container for the select
+        const node = document.createElement('div');
+        node.className = 'jp-select-wrapper';
+        node.style.minHeight = '100px';
+        node.style.minWidth = '300px';
+        node.style.padding = '10px';
+        node.appendChild(document.createTextNode('Select a file to download:'));
+        node.appendChild(document.createElement('br'));
+        node.appendChild(document.createElement('br'));
+        node.appendChild(selectNode);
+
+        // Create a widget with the node
+        const widget = new Widget({ node });
+        // Set explicit size to ensure dropdown is visible
+        widget.node.style.minHeight = '150px';
+        widget.node.style.minWidth = '350px';
+
+        // Show dialog with dropdown
+        const result = await showDialog({
+            title: 'Download from HydroShare',
+            body: widget,
+            buttons: [
+                Dialog.cancelButton({ label: 'Cancel' }),
+                Dialog.okButton({ label: 'Download' })
+            ],
+            defaultButton: 1
+        });
+
+        if (result.button.label === 'Download') {
+            const selectedFile = selectNode.value;
+
+            // Download the selected file
+            const downloadResponse = await requestAPI<any>('download', {
+                method: 'POST',
+                body: JSON.stringify({
+                    resource_id: resourceId,
+                    file_path: selectedFile
+                }),
+            });
+
+            await showDialog({
+                title: 'Download Successful',
+                body: downloadResponse.success,
+                buttons: [Dialog.okButton({label: 'OK'})]
+            });
+
+            // Refresh the file browser to show the new file
+            fileBrowser.model.refresh();
+        }
+    } catch (error) {
+        const errMssg = `Download from HydroShare Failed:`;
+        if (error instanceof Error) {
+            console.error(errMssg, error.message);
+            await showDialog({
+                title: `Download Failed`,
+                body: `Error: ${error.message}.`,
+                buttons: [Dialog.okButton({label: 'OK'})]
+            });
+        } else {
+            console.error(errMssg, error);
+        }
+    } finally {
+        if (content.isAttached) {
+            content.parent = null;
+        }
+        mainWidget.dispose();
+        enableFileBrowser(fileBrowser);
+    }
+}
+
 const extension: JupyterFrontEndPlugin<void> = {
     id: 'hsfiles_jupyter:plugin',
     autoStart: true,
@@ -192,7 +321,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         const {commands} = app;
         const {tracker} = factory;
         console.log('JupyterLab extension hsfiles_jupyter is activated!');
-        
+
         commands.addCommand('upload-to-hydroshare', {
             label: 'Upload File to HydroShare',
             icon: addIcon,
@@ -221,7 +350,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
         commands.addCommand('refresh-from-hydroshare', {
             label: 'Replace with File from HydroShare',
-            icon: downloadIcon,
+            icon: refreshIcon,
             execute: async () => {
                 const result = await showDialog({
                     title: 'Replace File',
@@ -285,6 +414,26 @@ const extension: JupyterFrontEndPlugin<void> = {
             )
         });
 
+        // Add command for downloading files from HydroShare
+        commands.addCommand('download-from-hydroshare', {
+            label: 'Download from HydroShare',
+            icon: downloadIcon,
+            isEnabled: () => {
+                const widget = tracker.currentWidget;
+                if (!widget) return false;
+
+                // Check if we're in the correct directory structure
+                const currentPath = widget.model.path;
+                const pathParts = currentPath.split('/');
+                return pathParts.length === 4 &&
+                       pathParts[0] === 'Downloads' &&
+                       pathParts[2] === 'data' &&
+                       pathParts[3] === 'contents' &&
+                       pathParts[1].length === 32;
+            },
+            execute: () => handleDownloadCommand(app, tracker)
+        });
+
         // Add separator before HydroShare items with a higher rank
         app.contextMenu.addItem({
             type: 'separator',
@@ -322,6 +471,14 @@ const extension: JupyterFrontEndPlugin<void> = {
             type: 'separator',
             selector: '.jp-DirListing-item[data-isdir="false"]',
             rank: 10.5
+        });
+
+        // Add the download command to the file browser context menu
+        // This will make it appear when right-clicking anywhere in the file browser
+        app.contextMenu.addItem({
+            command: 'download-from-hydroshare',
+            selector: '.jp-FileBrowser',
+            rank: 11.0
         });
     }
 };
